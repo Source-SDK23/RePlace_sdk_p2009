@@ -299,6 +299,7 @@ void CPortal_Player::Precache(void)
 
 	PrecacheScriptSound("PortalPlayer.Woosh");
 	PrecacheScriptSound("PortalPlayer.FallRecover");
+	PrecacheScriptSound("Player.BurnPain");
 
 	PrecacheModel("sprites/glow01.vmt");
 
