@@ -298,7 +298,11 @@ CProp_Portal* UTIL_Portal_TraceRay_Beam( const Ray_t &ray, unsigned int fMask, I
 }
 
 
-bool UTIL_Portal_Trace_Beam( const CBeam *pBeam, Vector &vecStart, Vector &vecEnd, Vector &vecIntersectionStart, Vector &vecIntersectionEnd, ITraceFilter *pTraceFilter )
+bool UTIL_Portal_Trace_Beam(const CBeam* pBeam, Vector& vecStart, Vector& vecEnd, Vector& vecIntersectionStart, Vector& vecIntersectionEnd, ITraceFilter* pTraceFilter)
+{
+	return UTIL_Portal_Trace_Beam(pBeam, vecStart, vecEnd, vecIntersectionStart, vecIntersectionEnd, MASK_SHOT, pTraceFilter);
+}
+bool UTIL_Portal_Trace_Beam( const CBeam *pBeam, Vector &vecStart, Vector &vecEnd, Vector &vecIntersectionStart, Vector &vecIntersectionEnd, int mask, ITraceFilter *pTraceFilter )
 {
 	vecStart = pBeam->GetAbsStartPos();
 	vecEnd = pBeam->GetAbsEndPos();
@@ -314,7 +318,7 @@ bool UTIL_Portal_Trace_Beam( const CBeam *pBeam, Vector &vecStart, Vector &vecEn
 	else
 		rayBeam.Init( vecEnd, vecStart );
 
-	CProp_Portal *pPortal = UTIL_Portal_TraceRay_Beam( rayBeam, MASK_SHOT, pTraceFilter, &fEndFraction );
+	CProp_Portal *pPortal = UTIL_Portal_TraceRay_Beam( rayBeam, mask, pTraceFilter, &fEndFraction );
 
 	// If we intersected a portal we need to modify the start and end points to match the actual trace through portal drawing extents
 	if ( !pPortal )
