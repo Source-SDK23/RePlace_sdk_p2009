@@ -27,6 +27,9 @@ public:
 	void InputTurnOn(inputdata_t& data);
 	void InputTurnOff(inputdata_t& data);
 	void InputToggle(inputdata_t& data);
+
+	static CPropLaserEmitter* Create(const Vector& origin, const QAngle& angle, const char* propModel, CBaseEntity* parent);
+	static CPropLaserEmitter* CreateNoModel(const Vector& origin, const QAngle& angle, CBaseEntity* parent);
 private:
 	CBeam* m_pBeam;
 	bool m_bStatus, m_bStartActive;

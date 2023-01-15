@@ -308,3 +308,24 @@ void CPropLaserEmitter::InputTurnOff(inputdata_t& data) {
 void CPropLaserEmitter::InputToggle(inputdata_t& data) {
 	Toggle();
 }
+
+CPropLaserEmitter* CPropLaserEmitter::Create(const Vector& origin, const QAngle& angle, const char* propModel, CBaseEntity* parent) {
+	CPropLaserEmitter* pEnt = CreateNoModel(origin, angle, parent);
+	if (pEnt != NULL) {
+		pEnt->SetModel(propModel);
+	}
+
+	return pEnt;
+}
+
+CPropLaserEmitter* CPropLaserEmitter::CreateNoModel(const Vector& origin, const QAngle& angle, CBaseEntity* parent) {
+	CPropLaserEmitter* pEnt = (CPropLaserEmitter*)CreateEntityByName("prop_laser_emitter");
+	if (pEnt != NULL) {
+		DispatchSpawn(pEnt);
+		pEnt->SetAbsOrigin(origin);
+		pEnt->SetAbsAngles(angle);
+		pEnt->SetParent(parent);
+	}
+
+	return pEnt;
+}
