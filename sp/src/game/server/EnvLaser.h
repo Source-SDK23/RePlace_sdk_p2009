@@ -27,8 +27,8 @@ public:
 	void	Precache( void );
 	bool	KeyValue( const char *szKeyName, const char *szValue );
 
-	void	TurnOn( void );
-	void	TurnOff( void );
+	virtual void	TurnOn( void );
+	virtual void	TurnOff( void );
 	int		IsOn( void );
 
 	void	FireAtPoint( trace_t &point );

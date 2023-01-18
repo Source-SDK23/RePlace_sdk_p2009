@@ -2,16 +2,16 @@
 
 #include "cbase.h"
 #include "props.h"
+#include "Sprite.h"
 
 #include "prop_laser_catcher.h"
 
-class CPropLaserEmitter : public CDynamicProp {
-	DECLARE_SERVERCLASS();
+class CEnvPortalLaser : public CBaseEntity {
 public:
-	DECLARE_CLASS(CPropLaserEmitter, CDynamicProp);
+	DECLARE_CLASS(CEnvPortalLaser, CBaseEntity);
 
-	CPropLaserEmitter();
-	~CPropLaserEmitter();
+	CEnvPortalLaser();
+	~CEnvPortalLaser();
 
 	virtual void Precache();
 	virtual void Spawn();
@@ -29,27 +29,42 @@ public:
 	void InputTurnOff(inputdata_t& data);
 	void InputToggle(inputdata_t& data);
 
-	static CPropLaserEmitter* Create(const Vector& origin, const QAngle& angle, const char* propModel, CBaseEntity* parent);
-	static CPropLaserEmitter* CreateNoModel(const Vector& origin, const QAngle& angle, CBaseEntity* parent);
+	void HandlePlayerKnockback(const Vector& vecDir, const Vector& vecStart);
 private:
 	CBeam* m_pBeam;
-	bool m_bStartActive;
-	
-	CNetworkVar(bool, m_bStatus);
-	CNetworkVar(bool, m_bThroughPortal);
+	bool m_bStatus, m_bStartActive;
 
 	CSoundPatch* m_pLaserSound;
-	//CParticleSystem* m_pLaserFx;
 
 	CFuncLaserDetector* m_pCatcher;
-	CTraceFilterSkipTwoEntities m_BeamFilter;
 
-	float m_fPainTimer;
-
-	CNetworkVar(Vector, m_vecBeamStart);
-	CNetworkVar(Vector, m_vecBeamEnd);
-	CNetworkVar(Vector, m_vecBeamPortalIn);
-	CNetworkVar(Vector, m_vecBeamPortalOut);
+	float m_fHurnSoundTime;
+	int m_iSprite;
 
 	DECLARE_DATADESC();
+};
+
+class CPropLaserEmitter : public CDynamicProp {
+public:
+	DECLARE_CLASS(CPropLaserEmitter, CDynamicProp);
+
+	CPropLaserEmitter();
+	~CPropLaserEmitter();
+
+	virtual void Precache();
+	virtual void Spawn();
+
+	void TurnOn();
+	void TurnOff();
+	void Toggle();
+
+	void InputTurnOn(inputdata_t& data);
+	void InputTurnOff(inputdata_t& data);
+	void InputToggle(inputdata_t& data);
+private:
+	CEnvPortalLaser* m_pLaser;
+
+	DECLARE_DATADESC();
+
+	bool m_bStartActive;
 };

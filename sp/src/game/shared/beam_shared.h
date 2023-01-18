@@ -107,8 +107,8 @@ public:
 
 	void SetMinDXLevel( int nMinDXLevel ) { m_nMinDXLevel = nMinDXLevel; }
 
-	void TurnOn( void );
-	void TurnOff( void );
+	virtual void TurnOn( void );
+	virtual void TurnOff( void );
 
 	int	GetType( void ) const;
 	int	GetBeamFlags( void ) const;
@@ -147,7 +147,9 @@ public:
 	void		LaserInit( CBaseEntity *pStartEntity, CBaseEntity *pEndEntity );
 	void		HoseInit( const Vector &start, const Vector &direction );
 	void		SplineInit( int nNumEnts, CBaseEntity** pEntList, int *attachment  );
-
+#ifdef PORTAL
+	void		SetBeamTraceMask(int mask);
+#endif
 	// Input handlers
 
 	static CBeam *BeamCreate( const char *pSpriteName, float width );
@@ -241,6 +243,7 @@ public:
 #ifdef PORTAL
 	CNetworkVar( bool, m_bDrawInMainRender );
 	CNetworkVar( bool, m_bDrawInPortalRender );
+	int m_iBeamTraceMask;
 #endif //#ifdef PORTAL
 };
 

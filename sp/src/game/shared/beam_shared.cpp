@@ -356,6 +356,7 @@ CBeam::CBeam( void )
 #ifdef PORTAL
 	m_bDrawInMainRender = true;
 	m_bDrawInPortalRender = true;
+	m_iBeamTraceMask = MASK_SHOT;
 #endif
 }
 
@@ -695,6 +696,10 @@ void CBeam::SplineInit( int nNumEnts, CBaseEntity** pEntList, int *attachment )
 	RelinkBeam();
 }
 
+void CBeam::SetBeamTraceMask(int mask) {
+	m_iBeamTraceMask = mask;
+}
+
 
 void CBeam::RelinkBeam( void )
 {
@@ -718,7 +723,7 @@ void CBeam::RelinkBeam( void )
 
 	CTraceFilterChain traceFilterChain( &traceFilter, pEntityBeamTraceFilter );
 
-	bUseExtraPoints = UTIL_Portal_Trace_Beam( this, startPos, endPos, vecAbsExtra1, vecAbsExtra2, &traceFilterChain );
+	bUseExtraPoints = UTIL_Portal_Trace_Beam( this, startPos, endPos, vecAbsExtra1, vecAbsExtra2, m_iBeamTraceMask, &traceFilterChain );
 #endif
 
 	// UNDONE: Should we do this to make the boxes smaller?
@@ -1118,7 +1123,7 @@ void CBeam::ComputeBounds( Vector& mins, Vector& maxs )
 
 	CTraceFilterChain traceFilterChain( &traceFilter, pEntityBeamTraceFilter );
 
-	bUseExtraPoints = UTIL_Portal_Trace_Beam( this, vecAbsStart, vecAbsEnd, vecAbsExtra1, vecAbsExtra2, &traceFilterChain );
+	bUseExtraPoints = UTIL_Portal_Trace_Beam( this, vecAbsStart, vecAbsEnd, vecAbsExtra1, vecAbsExtra2, m_iBeamTraceMask, &traceFilterChain );
 #endif
 
 	switch( GetType() )
