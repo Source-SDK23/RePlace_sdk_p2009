@@ -63,6 +63,7 @@ public:
 	void InputToggle(inputdata_t& data);
 private:
 	CEnvPortalLaser* m_pLaser;
+	CSprite* m_pLaserSprite;
 
 	DECLARE_DATADESC();
 

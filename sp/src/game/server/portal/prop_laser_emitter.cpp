@@ -13,18 +13,17 @@
 #include "prop_laser_catcher.h"
 
 #define LASER_BEAM_SPRITE "sprites/purplelaser1.vmt"//"sprites/xbeam2.vmt"
-#define LASER_EMITTER_DEFAULT_SPRITE "sprites/purpleglow1.vmt"
+#define LASER_EMITTER_DEFAULT_SPRITE NULL//"sprites/purpleglow1.vmt"
 
 #define LASER_ACTIVATION_SOUND "Laser.Activate"
 #define LASER_AMBIENCE_SOUND "vfx/laser_beam_lp_01.wav"
-
-#define LASER_PARTICLE "laser_fx"
 
 #define LASER_AMBIENCE_SOUND_VOLUME 0.1f
 
 ConVar portal_laser_colour("portal_laser_colour", "255 64 64", FCVAR_REPLICATED, "Set the colour of the laser beams. Note: You need to reload the map to apply changes!");
 ConVar portal_laser_texture("portal_laser_texture", LASER_BEAM_SPRITE, FCVAR_REPLICATED, "Set the texture of the laser beams. Note: You need to reload the map to apply changes!");
-ConVar portal_laser_effect("portal_laser_effect", LASER_PARTICLE, FCVAR_REPLICATED, "Effect plays on the emitter when it's active.");
+ConVar portal_laser_effect("portal_laser_effect", LASER_EMITTER_DEFAULT_SPRITE, FCVAR_REPLICATED, "Sprite on the laser emitter.");
+ConVar portal_laser_effect_scale("portal_laser_effect_scale", "0.75", FCVAR_REPLICATED, "Laser emitter sprite scale.");
 ConVar portal_laser_sfx_volume("portal_laser_sfx_volume", "-1", FCVAR_REPLICATED, "Laser's buzzing sound volume. Use -1 for default volume.");
 ConVar portal_laser_debug("portal_laser_debug", "0", FCVAR_CHEAT, "Show laser debug informations.");
 ConVar portal_laser_pushforce("portal_laser_pushforce", "200", FCVAR_CHEAT, "Set the push force of the laser.");
@@ -58,9 +57,6 @@ CEnvPortalLaser::CEnvPortalLaser() : m_pBeam(NULL), m_pCatcher(NULL), BaseClass(
 void CEnvPortalLaser::Precache() {
 	PrecacheScriptSound(LASER_ACTIVATION_SOUND);
 	PrecacheSound(LASER_AMBIENCE_SOUND);
-	PrecacheParticleSystem(LASER_PARTICLE);
-
-	m_iSprite = PrecacheModel(LASER_EMITTER_DEFAULT_SPRITE);
 
 	BaseClass::Precache();
 }
@@ -73,39 +69,42 @@ void CEnvPortalLaser::Spawn() {
 	} else {
 		TurnOff();
 	}
-
-	SetSolid(SOLID_VPHYSICS);
-
-	CreateVPhysics();
 }
 
 void CEnvPortalLaser::LaserThink() {
-	Vector vecStart = GetAbsOrigin(), vecEnd;
+	Vector vecStart, vecEnd;
 	Vector vecPortalIn, vecPortalOut;
 	Vector vecDir, traceDir;
 	QAngle angDir = GetAbsAngles();
 	trace_t tr;
 	AngleVectors(GetAbsAngles(), &vecDir);
 
-	traceDir = vecDir;
+	if (portal_laser_debug.GetBool()) {
+		NDebugOverlay::Axis(GetAbsOrigin(), angDir, 16, false, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+	}
 
+	m_pBeam->PointsInit(GetAbsOrigin(), GetAbsOrigin() + vecDir * MAX_TRACE_LENGTH);
 	if (UTIL_Portal_Trace_Beam(m_pBeam, vecStart, vecEnd, vecPortalIn, vecPortalOut, MASK_BLOCKLOS, NULL)) {
-		Vector vecOrigin = GetAbsOrigin();
-		QAngle angDir = GetAbsAngles();
-
-		m_pBeam->PointsInit(vecOrigin, vecOrigin + vecDir * MAX_TRACE_LENGTH);
+		m_pBeam->PointsInit(vecStart, vecStart + vecDir * MAX_TRACE_LENGTH);
 
 		traceDir = (vecEnd - vecPortalOut).Normalized();
 		UTIL_TraceLine(vecPortalOut, vecPortalOut + (traceDir * MAX_TRACE_LENGTH), MASK_BLOCKLOS, NULL, &tr);
-		HandlePlayerKnockback(vecDir, GetAbsOrigin());
+		HandlePlayerKnockback(vecDir, vecStart);
 		HandlePlayerKnockback(traceDir, vecPortalOut);
+
+		if (portal_laser_debug.GetBool()) {
+			NDebugOverlay::Line(vecStart, vecPortalIn, 0xFF, 0xFF, 0x00, false, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+			NDebugOverlay::Line(vecPortalOut, vecEnd, 0xFF, 0xFF, 0x00, false, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+		}
 	} else {
-		Vector vecOrigin = GetAbsOrigin();
-		QAngle angDir = GetAbsAngles();
-		UTIL_TraceLine(vecOrigin, vecOrigin + (traceDir * MAX_TRACE_LENGTH), MASK_BLOCKLOS, NULL, &tr);
+		traceDir = vecDir;
+		UTIL_TraceLine(GetAbsOrigin(), GetAbsOrigin() + (traceDir * MAX_TRACE_LENGTH), MASK_BLOCKLOS, NULL, &tr);
 		HandlePlayerKnockback(vecDir, GetAbsOrigin());
 
-		m_pBeam->PointsInit(vecOrigin, tr.endpos);
+		m_pBeam->PointsInit(GetAbsOrigin(), tr.endpos);
+		if (portal_laser_debug.GetBool()) {
+			NDebugOverlay::Line(tr.startpos, tr.endpos, 0xFF, 0xFF, 0x00, false, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+		}
 	}
 
 	bool bSparks = true;
@@ -161,11 +160,11 @@ void CEnvPortalLaser::TurnOn() {
 		QAngle angDir = GetAbsAngles();
 		AngleVectors(angDir, &vecDir);
 
-		CBaseAnimating* pAnim = dynamic_cast<CBaseAnimating*>(GetParent());
+		/*CBaseAnimating* pAnim = dynamic_cast<CBaseAnimating*>(GetParent());
 		if (pAnim != NULL && !pAnim->GetAttachment("laser_attachment", vecOrigin, angDir)) {
 			vecOrigin = GetAbsOrigin();
 			angDir = GetAbsAngles();
-		}
+		}*/
 
 		if (m_pBeam == NULL) {
 			m_pBeam = (CBeam*)CreateEntityByName("beam");
@@ -188,19 +187,11 @@ void CEnvPortalLaser::TurnOn() {
 				m_pBeam->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
 				m_pBeam->PointsInit(vecOrigin, vecOrigin + vecDir * MAX_TRACE_LENGTH);
 				m_pBeam->SetStartEntity(this);
-				m_pBeam->SetHaloTexture(m_iSprite);
-				m_pBeam->SetHaloScale(10);
-				// m_pBeam->SetParent(this);
 			} else {
 				Warning("Failed to create beam!");
 			}
 		} else {
 			m_pBeam->RemoveEffects(EF_NODRAW);
-		}
-
-		const char* effect = portal_laser_effect.GetString();
-		if (effect == NULL) {
-			effect = LASER_PARTICLE;
 		}
 
 		m_bStatus = true;
@@ -330,6 +321,9 @@ CPropLaserEmitter::~CPropLaserEmitter() {
 	if (m_pLaser) {
 		UTIL_Remove(m_pLaser);
 	}
+	if (m_pLaserSprite) {
+		UTIL_Remove(m_pLaserSprite);
+	}
 }
 
 void CPropLaserEmitter::Precache() {
@@ -341,12 +335,16 @@ void CPropLaserEmitter::Precache() {
 	BaseClass::Precache();
 }
 void CPropLaserEmitter::Spawn() {
+	BaseClass::Spawn();
+
 	m_pLaser = dynamic_cast<CEnvPortalLaser*>(CreateEntityByName("env_portal_laser"));
 	if (m_pLaser != NULL) {
 		m_pLaser->Precache();
+		m_pLaser->SetParent(this);
+		m_pLaser->SetParentAttachment("SetParentAttachment", "laser_attachment", false);
+
 		DispatchSpawn(m_pLaser);
 
-		m_pLaser->SetParent(this);
 		if (m_bStartActive) {
 			m_pLaser->TurnOn();
 		} else {
@@ -354,25 +352,57 @@ void CPropLaserEmitter::Spawn() {
 		}
 	}
 
+	m_pLaserSprite = dynamic_cast<CSprite*>(CreateEntityByName("env_sprite"));
+	if (m_pLaserSprite != NULL) {
+		const char* szSprite = portal_laser_effect.GetString();
+		if (szSprite == NULL || Q_strlen(szSprite) == 0) {
+			szSprite = LASER_EMITTER_DEFAULT_SPRITE;
+		}
+		m_pLaserSprite->KeyValue("model", szSprite);
+		m_pLaserSprite->Precache();
+		m_pLaserSprite->SetParent(this);
+		m_pLaserSprite->SetParentAttachment("SetParentAttachment", "laser_attachment", false);
+		DispatchSpawn(m_pLaserSprite);
+		m_pLaserSprite->SetRenderMode(kRenderWorldGlow);
+		m_pLaserSprite->SetScale(portal_laser_effect_scale.GetFloat());
+
+		if (m_bStartActive) {
+			m_pLaserSprite->TurnOn();
+		} else {
+			m_pLaserSprite->TurnOff();
+		}
+	}
+
 	CreateVPhysics();
 	SetSolid(SOLID_VPHYSICS);
-
-	BaseClass::Spawn();
 }
 
 void CPropLaserEmitter::TurnOn() {
 	if (m_pLaser != NULL) {
 		m_pLaser->TurnOn();
 	}
+	if (m_pLaserSprite != NULL) {
+		m_pLaserSprite->TurnOn();
+	}
 }
 void CPropLaserEmitter::TurnOff() {
 	if (m_pLaser != NULL) {
 		m_pLaser->TurnOff();
 	}
+	if (m_pLaserSprite != NULL) {
+		m_pLaserSprite->TurnOff();
+	}
 }
 void CPropLaserEmitter::Toggle() {
 	if (m_pLaser != NULL) {
 		m_pLaser->Toggle();
+	}
+	if (m_pLaserSprite != NULL) {
+		if (m_pLaserSprite->IsOn()) {
+			m_pLaserSprite->TurnOff();
+		} else {
+			m_pLaserSprite->TurnOn();
+		}
 	}
 }
 
