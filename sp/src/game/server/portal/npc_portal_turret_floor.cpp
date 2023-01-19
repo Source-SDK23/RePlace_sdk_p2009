@@ -1577,7 +1577,7 @@ void CNPC_Portal_FloorTurret::SelfDestruct(void)
 	if (!m_bSelfDestructing) {
 		Deploy();
 		EmitSound(GetTurretTalkName(PORTAL_TURRET_START_BURNING));
-		m_flSelfDestructTalkTime = gpGlobals->curtime + 1;
+		m_flSelfDestructTalkTime = gpGlobals->curtime + 0.5f;
 		if (m_bEnabled) {
 			m_bEnabled = false;
 		}
@@ -1594,7 +1594,7 @@ void CNPC_Portal_FloorTurret::OnLaunched(void)
 #define SELF_DESTRUCT_BEEP_MIN_DELAY	0.1f
 #define SELF_DESTRUCT_BEEP_MAX_DELAY	0.75f
 
-#define SELF_DESTRUCT_TALK_MIN_DELAY	1.0f
+#define SELF_DESTRUCT_TALK_MIN_DELAY	0.5f
 #define SELF_DESTRUCT_TALK_MAX_DELAY	0.5f
 
 #define SELF_DESTRUCT_BEEP_MIN_PITCH	100.0f
