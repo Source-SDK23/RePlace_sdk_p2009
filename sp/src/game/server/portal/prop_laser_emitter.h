@@ -30,15 +30,18 @@ public:
 	void InputToggle(inputdata_t& data);
 
 	void HandlePlayerKnockback(const Vector& vecDir, const Vector& vecStart);
+
+	void SetPlayerDamage(float damage);
 private:
 	CBeam* m_pBeam;
+	CBeam* m_pBeamAfterPortal;
 	bool m_bStatus, m_bStartActive;
 
 	CSoundPatch* m_pLaserSound;
 
 	CFuncLaserDetector* m_pCatcher;
 
-	float m_fHurnSoundTime;
+	float m_fHurnSoundTime, m_fPlayerDamage;
 	int m_iSprite;
 
 	DECLARE_DATADESC();
@@ -64,6 +67,8 @@ public:
 private:
 	CEnvPortalLaser* m_pLaser;
 	CSprite* m_pLaserSprite;
+
+	float m_fPlayerDamage;
 
 	DECLARE_DATADESC();
 

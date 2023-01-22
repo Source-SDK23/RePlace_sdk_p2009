@@ -2,7 +2,7 @@
 
 #include "cbase.h"
 #include "props.h"
-#include "particle_system.h"
+#include "Sprite.h"
 
 #include <set>
 
@@ -38,8 +38,6 @@ private:
 
 	bool m_bActivated;
 
-	CParticleSystem* m_pPoweredParticle;
-
 	CSoundPatch* m_pActiveSound;
 
 	std::set<CBaseEntity*> m_LaserList;
@@ -59,6 +57,7 @@ public:
 	void FirePowerOffOutput();
 private:
 	CFuncLaserDetector* m_pLaserDetector;
+	CSprite* m_pActivatedSprite;
 
 	const char* m_szIdleAnimation;
 	const char* m_szActiveAnimation;

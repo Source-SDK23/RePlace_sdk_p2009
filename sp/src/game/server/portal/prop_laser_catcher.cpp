@@ -6,6 +6,15 @@
 #define CATCHER_DEACTIVATE_SOUND "LaserCatcher.Deactivate"
 #define CATCHER_AMBIENCE_SOUND "world/laser_node_lp_01.wav"
 
+#define LASER_EMITTER_DEFAULT_SPRITE "sprites/light_glow02_add.vmt"//"sprites/purpleglow1.vmt"
+#define LASER_SPRITE_COLOUR 255, 64, 64
+
+// CVar for visuals
+// TODO: Finialize visuals and use macros/constants instead!
+extern ConVar portal_laser_glow_sprite_colour;
+extern ConVar portal_laser_glow_sprite;
+extern ConVar portal_laser_glow_sprite_scale;
+
 LINK_ENTITY_TO_CLASS(func_laser_detect, CFuncLaserDetector)
 
 BEGIN_DATADESC(CFuncLaserDetector)
@@ -180,8 +189,8 @@ void CPropLaserCatcher::Spawn() {
 
 	if (!GetAttachment("laser_target", vecOrigin, angDir)) {
 		vecOrigin = GetAbsOrigin();
-		angDir = GetAbsAngles();
 	}
+	angDir = GetAbsAngles();
 
 	m_bHoldAnimation = true;
 
@@ -190,6 +199,38 @@ void CPropLaserCatcher::Spawn() {
 		Vector(-5, -10, -10), Vector(5, 10, 10),
 		this
 	);
+
+	m_pActivatedSprite = dynamic_cast<CSprite*>(CreateEntityByName("env_sprite"));
+	if (m_pActivatedSprite != NULL) {
+		if (!GetAttachment("laser_target", vecOrigin, angDir)) {
+			vecOrigin = GetAbsOrigin();
+		}
+		Vector vecDir;
+		AngleVectors(GetAbsAngles(), &vecDir);
+		vecOrigin += vecDir * 6; // Adjust position, so the sprite is not clipping into the model.
+
+		const char* szSprite = portal_laser_glow_sprite.GetString();
+		if (szSprite == NULL || Q_strlen(szSprite) == 0) {
+			szSprite = LASER_EMITTER_DEFAULT_SPRITE;
+		}
+		m_pActivatedSprite->KeyValue("model", szSprite);
+		m_pActivatedSprite->Precache();
+		m_pActivatedSprite->SetParent(this);
+		DispatchSpawn(m_pActivatedSprite);
+		m_pActivatedSprite->SetAbsOrigin(vecOrigin);
+		m_pActivatedSprite->SetRenderMode(kRenderWorldGlow);
+
+		const char* szColor = portal_laser_glow_sprite_colour.GetString();
+		if (szColor != NULL && Q_strlen(szColor) > 0) {
+			int r, g, b;
+			sscanf(szColor, "%i%i%i", &r, &g, &b);
+			m_pActivatedSprite->SetRenderColor(r, g, b);
+		} else {
+			m_pActivatedSprite->SetRenderColor(LASER_SPRITE_COLOUR);
+		}
+		m_pActivatedSprite->SetScale(portal_laser_glow_sprite_scale.GetFloat());
+		m_pActivatedSprite->TurnOff();
+	}
 
 	// Setup default animations if not specified
 	if (m_szIdleAnimation == NULL) {
@@ -211,6 +252,9 @@ void CPropLaserCatcher::FirePowerOnOutput() {
 		InputSetAnimation(input);
 	}
 
+	if (m_pActivatedSprite != NULL) {
+		m_pActivatedSprite->TurnOn();
+	}
 	m_nSkin = 1;
 	m_OnPowered.FireOutput(NULL, NULL);
 }
@@ -222,6 +266,9 @@ void CPropLaserCatcher::FirePowerOffOutput() {
 		InputSetAnimation(input);
 	}
 
+	if (m_pActivatedSprite != NULL) {
+		m_pActivatedSprite->TurnOff();
+	}
 	m_nSkin = 0;
 	m_OnUnpowered.FireOutput(NULL, NULL);
 }

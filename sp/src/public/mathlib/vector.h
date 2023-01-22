@@ -94,6 +94,9 @@ public:
 	Vector2D& AsVector2D();
 	const Vector2D& AsVector2D() const;
 
+	// Remove Z component
+	const Vector RemoveZ() const;
+
 	// Initialization methods
 	void Random( vec_t minVal, vec_t maxVal );
 	inline void Zero(); ///< zero out a vector
@@ -624,6 +627,11 @@ inline Vector2D& Vector::AsVector2D()
 inline const Vector2D& Vector::AsVector2D() const
 {
 	return *(const Vector2D*)this;
+}
+
+inline const Vector Vector::RemoveZ() const
+{
+	return Vector(x, y, 0);
 }
 
 //-----------------------------------------------------------------------------

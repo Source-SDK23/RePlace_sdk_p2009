@@ -346,7 +346,7 @@ bool UTIL_Portal_Trace_Beam( const CBeam *pBeam, Vector &vecStart, Vector &vecEn
 		CTraceFilterSkipClassname traceFilter( pPortal->m_hLinkedPortal, "prop_energy_ball", COLLISION_GROUP_NONE );
 
 		rayBeam.Init( vecIntersectionEnd, vecEnd );
-		pPortal = UTIL_Portal_TraceRay_Beam( rayBeam, MASK_SHOT, &traceFilter, &fEndFraction );
+		pPortal = UTIL_Portal_TraceRay_Beam( rayBeam, mask, &traceFilter, &fEndFraction );
 		vecIntersection = rayBeam.m_Start + rayBeam.m_Delta * fEndFraction;
 
 		++iNumLoops;
