@@ -151,6 +151,7 @@ public:
 
 	void TurnOff( void );
 	void TurnOn( void );
+	void Toggle( void );
 	bool IsOn() { return !IsEffectActive( EF_NODRAW ); }
 
 	inline float Frames( void ) { return m_flMaxFrame; }

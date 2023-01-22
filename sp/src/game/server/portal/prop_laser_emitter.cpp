@@ -426,6 +426,7 @@ void CPropLaserEmitter::Precache() {
 void CPropLaserEmitter::Spawn() {
 	BaseClass::Spawn();
 
+	// Create laser beam
 	m_pLaser = dynamic_cast<CEnvPortalLaser*>(CreateEntityByName("env_portal_laser"));
 	if (m_pLaser != NULL) {
 		m_pLaser->KeyValue("playerdamage", m_fPlayerDamage);
@@ -442,6 +443,7 @@ void CPropLaserEmitter::Spawn() {
 		}
 	}
 
+	// Create glow
 	m_pLaserSprite = dynamic_cast<CSprite*>(CreateEntityByName("env_sprite"));
 	if (m_pLaserSprite != NULL) {
 		const char* szSprite = portal_laser_glow_sprite.GetString();
@@ -471,11 +473,13 @@ void CPropLaserEmitter::Spawn() {
 		}
 	}
 
+	// Create collisions
 	CreateVPhysics();
 	SetSolid(SOLID_VPHYSICS);
 }
 
 void CPropLaserEmitter::TurnOn() {
+	// Show laser beam and glow
 	if (m_pLaser != NULL) {
 		m_pLaser->TurnOn();
 	}
@@ -483,9 +487,11 @@ void CPropLaserEmitter::TurnOn() {
 		m_pLaserSprite->TurnOn();
 	}
 
+	// Play activation sound
 	EmitSound(LASER_ACTIVATION_SOUND);
 }
 void CPropLaserEmitter::TurnOff() {
+	// Hide laser beam and glow
 	if (m_pLaser != NULL) {
 		m_pLaser->TurnOff();
 	}
@@ -494,15 +500,12 @@ void CPropLaserEmitter::TurnOff() {
 	}
 }
 void CPropLaserEmitter::Toggle() {
+	// Toggle laser beam and glow
 	if (m_pLaser != NULL) {
 		m_pLaser->Toggle();
 	}
 	if (m_pLaserSprite != NULL) {
-		if (m_pLaserSprite->IsOn()) {
-			m_pLaserSprite->TurnOff();
-		} else {
-			m_pLaserSprite->TurnOn();
-		}
+		m_pLaserSprite->Toggle();
 	}
 }
 

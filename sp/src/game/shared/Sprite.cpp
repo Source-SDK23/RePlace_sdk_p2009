@@ -566,6 +566,18 @@ void CSprite::TurnOn( void )
 	m_flFrame = 0;
 }
 
+void CSprite::Toggle( void )
+{
+	if (!IsEffectActive(EF_NODRAW))
+	{
+		TurnOff();
+	}
+	else
+	{
+		TurnOn();
+	}
+}
+
 #if !defined( CLIENT_DLL )
 // DVS TODO: Obsolete Use handler
 void CSprite::Use( CBaseEntity *pActivator, CBaseEntity *pCaller, USE_TYPE useType, float value )
