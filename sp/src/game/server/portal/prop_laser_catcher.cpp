@@ -15,6 +15,8 @@ extern ConVar portal_laser_glow_sprite_colour;
 extern ConVar portal_laser_glow_sprite;
 extern ConVar portal_laser_glow_sprite_scale;
 
+ConVar portal_laser_catcher_detector_size("portal_laser_catcher_detector_size", "12", FCVAR_CHEAT, "Set the laser catcher's detector size.");
+
 LINK_ENTITY_TO_CLASS(func_laser_detect, CFuncLaserDetector)
 
 BEGIN_DATADESC(CFuncLaserDetector)
@@ -33,6 +35,8 @@ END_DATADESC()
 extern ConVar portal_laser_debug;
 
 void CFuncLaserDetector::Spawn() {
+	BaseClass::Spawn();
+
 	SetSolid(SOLID_BBOX);
 
 	if (m_szPropEntity != NULL) {
@@ -52,36 +56,37 @@ void CFuncLaserDetector::Precache() {
 }
 
 void CFuncLaserDetector::AddEmitter(CBaseEntity* emitter) {
+	// Store previous list count
 	int oldCount = m_LaserList.size();
 
+	// Check if the emitter has not been added already.
 	if (m_LaserList.find(emitter) == m_LaserList.end()) {
+		// Add laser emitter
 		m_LaserList.insert(emitter);
 	}
 
+	// Check if we added any laser emitters
 	if (oldCount == 0 && m_LaserList.size() > 0) {
+		// Play activated sound
 		EmitSound(CATCHER_ACTIVATE_SOUND);
+		// Fire output event
 		m_OnPowered.FireOutput(NULL, NULL);
-		if (m_pProp) {
-			CBaseAnimating* pAnim = dynamic_cast<CBaseAnimating*>(m_pProp.Get());
-			if (pAnim && m_szActiveAnimation != NULL) {
-				int i = pAnim->LookupSequence(m_szActiveAnimation);
-				if (i == -1) {
-					pAnim->SetSequence(i);
-				}
-			}
-			if (Q_strcmp(m_pProp->GetClassname(), "prop_laser_catcher") == 0) {
-				CPropLaserCatcher* catcher = dynamic_cast<CPropLaserCatcher*>(m_pProp.Get());
-				if (catcher) {
-					catcher->FirePowerOnOutput();
-				}
+
+		// Check if the detector has a parent catcher.
+		if (m_pProp != NULL && FClassnameIs(m_pProp, "prop_laser_catcher")) {
+			CPropLaserCatcher* catcher = dynamic_cast<CPropLaserCatcher*>(m_pProp.Get());
+			if (catcher) {
+				// Fire "PowerOn" output of the parent prop.
+				catcher->FirePowerOnOutput();
 			}
 		}
-
+		// Create looping "active" sound
 		CreateSounds();
 	}
 }
 
 void CFuncLaserDetector::RemoveEmitter(CBaseEntity* emitter) {
+	// Check if the emitter is on the list, then remove it.
 	std::set<CBaseEntity*>::iterator it = m_LaserList.find(emitter);
 	if (it != m_LaserList.end()) {
 		m_LaserList.erase(it);
@@ -90,21 +95,15 @@ void CFuncLaserDetector::RemoveEmitter(CBaseEntity* emitter) {
 	if (m_LaserList.size() == 0) {
 		EmitSound(CATCHER_DEACTIVATE_SOUND);
 		m_OnUnpowered.FireOutput(NULL, NULL);
-		if (m_pProp) {
-			CBaseAnimating* pAnim = dynamic_cast<CBaseAnimating*>(m_pProp.Get());
-			if (pAnim && m_szIdleAnimation != NULL) {
-				int i = pAnim->LookupSequence(m_szIdleAnimation);
-				if (i == -1) {
-					pAnim->SetSequence(i);
-				}
-			}
-			if (Q_strcmp(m_pProp->GetClassname(), "prop_laser_catcher") == 0) {
-				CPropLaserCatcher* catcher = dynamic_cast<CPropLaserCatcher*>(m_pProp.Get());
-				if (catcher) {
-					catcher->FirePowerOffOutput();
-				}
+		// Check if the detector has a parent catcher.
+		if (m_pProp != NULL && FClassnameIs(m_pProp, "prop_laser_catcher")) {
+			CPropLaserCatcher* catcher = dynamic_cast<CPropLaserCatcher*>(m_pProp.Get());
+			if (catcher) {
+				// Fire "PowerOff" output of the parent prop.
+				catcher->FirePowerOffOutput();
 			}
 		}
+		// Stop looping "active" sound
 		DestroySounds();
 	}
 }
@@ -132,16 +131,20 @@ bool CFuncLaserDetector::IsActivated() const {
 }
 
 CFuncLaserDetector* CFuncLaserDetector::Create(const Vector& origin, const QAngle& angles, const Vector& mins, const Vector& maxs, CBaseEntity* owner) {
+	// Create detector entity
 	CFuncLaserDetector* pEnt = dynamic_cast<CFuncLaserDetector*>(CreateEntityByName("func_laser_detect"));
 	if (pEnt == NULL) {
 		return NULL;
 	}
 
+	// Set detector bounds
 	UTIL_SetSize(pEnt, mins, maxs);
+	// Set parent
 	pEnt->m_pProp = owner;
 	pEnt->SetParent(owner);
 	DispatchSpawn(pEnt);
 
+	// Set location and rotation
 	pEnt->SetAbsOrigin(origin);
 	pEnt->SetAbsAngles(angles);
 
@@ -192,11 +195,14 @@ void CPropLaserCatcher::Spawn() {
 	}
 	angDir = GetAbsAngles();
 
+	Vector vecDir;
+	AngleVectors(angDir, &vecDir);
+
 	m_bHoldAnimation = true;
 
 	m_pLaserDetector = CFuncLaserDetector::Create(
-		vecOrigin, angDir,
-		Vector(-5, -10, -10), Vector(5, 10, 10),
+		vecOrigin - vecDir * portal_laser_catcher_detector_size.GetFloat() * 0.5f, angDir,
+		Vector(-portal_laser_catcher_detector_size.GetFloat()), Vector(portal_laser_catcher_detector_size.GetFloat()),
 		this
 	);
 
