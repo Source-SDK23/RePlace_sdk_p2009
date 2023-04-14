@@ -355,6 +355,8 @@ void CPortal_Player::GiveAllItems(void)
 	CBasePlayer::GiveAmmo(3, "rpg_round");
 	CBasePlayer::GiveAmmo(6, "grenade");
 
+	CBasePlayer::GiveAmmo(100, "Uranium");
+
 	GiveNamedItem("weapon_crowbar");
 	GiveNamedItem("weapon_physcannon");
 
@@ -373,7 +375,9 @@ void CPortal_Player::GiveAllItems(void)
 	GiveNamedItem("weapon_frag");
 	GiveNamedItem("weapon_rpg");
 
+	GiveNamedItem("weapon_gauss");
 	GiveNamedItem("weapon_bugbait");
+	GiveNamedItem("weapon_immolator");
 
 	CWeaponPortalgun* pPortalGun = static_cast<CWeaponPortalgun*>(GiveNamedItem("weapon_portalgun"));
 
