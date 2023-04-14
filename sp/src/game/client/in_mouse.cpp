@@ -81,7 +81,8 @@ extern ConVar cam_idealyaw;
 extern ConVar cam_idealpitch;
 extern ConVar thirdperson_platformer;
 
-static ConVar m_filter( "m_filter","0", FCVAR_ARCHIVE, "Mouse filtering (set this to 1 to average the mouse over 2 frames)." );
+static ConVar m_filter( "m_filter","0", FCVAR_ARCHIVE, "Ultra mouse filtering (set this to 1 to average the mouse using a low-pass filter). INCRUE SOURCE ONLY" );
+ConVar m_filter_frames("m_filter_frames", "12", FCVAR_ARCHIVE, "How many frames to smooth for ultra mouse filtering (m_filter)", true, 1, true, 10000);
 ConVar sensitivity( "sensitivity","3", FCVAR_ARCHIVE, "Mouse sensitivity.", true, 0.0001f, true, 10000000 );
 
 static ConVar m_side( "m_side","0.8", FCVAR_ARCHIVE, "Mouse side factor." );
@@ -365,14 +366,22 @@ void CInput::GetAccumulatedMouseDeltasAndResetAccumulators( float *mx, float *my
 //			*x - 
 //			*y - 
 //-----------------------------------------------------------------------------
-void CInput::GetMouseDelta( float inmousex, float inmousey, float *pOutMouseX, float *pOutMouseY )
+void CInput::GetMouseDelta(float inmousex, float inmousey, float *pOutMouseX, float *pOutMouseY)
 {
-	// Apply filtering?
-	if ( m_filter.GetBool() )
+	// Incrue Source Ultra Filtering :tm:
+	// Uses a low pass filter or something
+
+	// User-defined number of frames to smooth
+	int numFramesToSmooth = m_filter_frames.GetInt(); // Modify this value to adjust the amount of smoothing
+
+	// Calculate time-based weighting factor
+	float weight = 2.0f / (numFramesToSmooth + 1);
+
+	if (m_filter.GetBool())
 	{
-		// Average over last two samples
-		*pOutMouseX = ( inmousex + m_flPreviousMouseXPosition ) * 0.5f;
-		*pOutMouseY = ( inmousey + m_flPreviousMouseYPosition ) * 0.5f;
+		// Apply low-pass filter
+		*pOutMouseX = (inmousex * weight) + (m_flPreviousMouseXPosition * (1.0f - weight));
+		*pOutMouseY = (inmousey * weight) + (m_flPreviousMouseYPosition * (1.0f - weight));
 	}
 	else
 	{
@@ -381,9 +390,8 @@ void CInput::GetMouseDelta( float inmousex, float inmousey, float *pOutMouseX, f
 	}
 
 	// Latch previous
-	m_flPreviousMouseXPosition = inmousex;
-	m_flPreviousMouseYPosition = inmousey;
-
+	m_flPreviousMouseXPosition = *pOutMouseX;
+	m_flPreviousMouseYPosition = *pOutMouseY;
 }
 
 //-----------------------------------------------------------------------------
