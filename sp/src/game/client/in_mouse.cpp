@@ -82,7 +82,8 @@ extern ConVar cam_idealpitch;
 extern ConVar thirdperson_platformer;
 
 static ConVar m_filter( "m_filter","0", FCVAR_ARCHIVE, "Ultra mouse filtering (set this to 1 to average the mouse using a low-pass filter). INCRUE SOURCE ONLY" );
-ConVar m_filter_frames("m_filter_frames", "12", FCVAR_ARCHIVE, "How many frames to smooth for ultra mouse filtering (m_filter)", true, 1, true, 10000);
+//ConVar m_filter_frames("m_filter_frames", "12", FCVAR_ARCHIVE, "How many frames to smooth for ultra mouse filtering (m_filter)", true, 1, true, 10000);
+ConVar m_filter_time("m_filter_time", "0.01", FCVAR_ARCHIVE, "How much time to smooth for ultra mouse filtering (m_filter)", true, 0, true, 10000);
 ConVar sensitivity( "sensitivity","3", FCVAR_ARCHIVE, "Mouse sensitivity.", true, 0.0001f, true, 10000000 );
 
 static ConVar m_side( "m_side","0.8", FCVAR_ARCHIVE, "Mouse side factor." );
@@ -366,16 +367,17 @@ void CInput::GetAccumulatedMouseDeltasAndResetAccumulators( float *mx, float *my
 //			*x - 
 //			*y - 
 //-----------------------------------------------------------------------------
+
+float m_flPreviousTime = 0.0f;
 void CInput::GetMouseDelta(float inmousex, float inmousey, float *pOutMouseX, float *pOutMouseY)
 {
-	// Incrue Source Ultra Filtering :tm:
-	// Uses a low pass filter or something
-
-	// User-defined number of frames to smooth
-	int numFramesToSmooth = m_filter_frames.GetInt(); // Modify this value to adjust the amount of smoothing
+	// User-defined time-based factor to smooth
+	float timeFactor = m_filter_time.GetFloat(); // Modify this value to adjust the amount of smoothing
 
 	// Calculate time-based weighting factor
-	float weight = 2.0f / (numFramesToSmooth + 1);
+	float currentTime = gpGlobals->curtime;
+	float deltaTime = currentTime - m_flPreviousTime;
+	float weight = 1.0f - powf(0.5f, deltaTime / timeFactor);
 
 	if (m_filter.GetBool())
 	{
@@ -392,6 +394,7 @@ void CInput::GetMouseDelta(float inmousex, float inmousey, float *pOutMouseX, fl
 	// Latch previous
 	m_flPreviousMouseXPosition = *pOutMouseX;
 	m_flPreviousMouseYPosition = *pOutMouseY;
+	m_flPreviousTime = currentTime;
 }
 
 //-----------------------------------------------------------------------------
