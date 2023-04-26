@@ -5,7 +5,7 @@
 //=====================================================================================//
 #include "cbase.h"					// for pch
 #include "prop_weightedcube.h"
-#include "prop_laser_catcher.h"
+#include "prop_laser_emitter.h"
 
 // memdbgon must be the last include file in a .cpp file!!!
 #include "tier0/memdbgon.h"
@@ -62,6 +62,8 @@ BEGIN_DATADESC(CPropWeightedCube)
 // Save/load
 DEFINE_USEFUNC(Use),
 
+DEFINE_FIELD(m_pLaser, FIELD_CLASSPTR),
+
 //DEFINE_KEYFIELD(m_oldSkin, FIELD_INTEGER, "skin"),
 DEFINE_KEYFIELD(m_cubeType, FIELD_INTEGER, "CubeType"),
 DEFINE_KEYFIELD(m_skinType, FIELD_INTEGER, "SkinType"),
@@ -86,7 +88,6 @@ DEFINE_OUTPUT(m_OnPhysGunDrop, "OnPhysGunDrop"),
 DEFINE_THINKFUNC(Think),
 
 END_DATADESC()
-
 
 
 //-----------------------------------------------------------------------------
@@ -225,33 +226,36 @@ void CPropWeightedCube::Spawn()
 
 void CPropWeightedCube::ToggleLaser(bool state)
 {
-	//if (m_cubeType != Reflective) return;
+	if (m_cubeType != Reflective) return;
 
-	//if (m_pLaser == nullptr) {
-	//	m_pLaser = dynamic_cast<CEnvPortalLaser*>(CreateEntityByName("env_portal_laser"));
-	//	m_pLaser->KeyValue("damage", "100");
-	//	m_pLaser->KeyValue("width", "2");
-	//	m_pLaser->KeyValue("texture", "sprites/laserbeam.spr");
-	//	m_pLaser->KeyValue("renderamt", "100");
-	//	m_pLaser->KeyValue("TextureScroll", "35");
-	//	m_pLaser->SetParent(this);
-	//	m_pLaser->SetParentAttachment("SetLaserAttachmentParent", "focus", false);
-	//	DispatchSpawn(m_pLaser);
-	//	m_pLaser->Activate();
-	//	m_pLaser->TurnOff();
-	//}
+	if (m_pLaser == nullptr) {
+		CEnvPortalLaser* pLaser = dynamic_cast<CEnvPortalLaser*>(CreateEntityByName("env_portal_laser"));
+		pLaser->Activate(); // Should be called when map loads so I put it at the top
 
-	//if (state == true) {
-	//	m_pLaser->TurnOn();
-	//}
-	//else if (state == false) {
-	//	m_pLaser->TurnOff();
-	//	if (dynamic_cast<CEnvLaserTarget*>(m_pLaser->m_pHitObject) != nullptr) {
-	//		CEnvLaserTarget* pTarget = dynamic_cast<CEnvLaserTarget*>(m_pLaser->m_pHitObject);
-	//		CPropLaserCatcher* pCatcher = dynamic_cast<CPropLaserCatcher*>(pTarget->GetParent());
-	//		pCatcher->TurnOff(m_pLaser);
-	//	}
-	//}
+		Vector vOrigin;
+		QAngle aAngle;
+		this->GetAttachment("focus", vOrigin, aAngle);
+		pLaser->SetAbsOrigin(vOrigin);
+		pLaser->SetAbsAngles(aAngle);
+		pLaser->SetParent(this, 0);
+
+		// For Portal2-SDK13 Asset
+		//pLaser->SetLocalOrigin(Vector(0, 0, 1)); // Offset the laser forwards from the bone by 1 unit so it doesn't collide with the cube
+		//pLaser->SetLocalAngles(QAngle(-90, 0, 0)); // Laser rotation is off, this may not be the case in p2009's model, check before merging
+		
+		pLaser->TurnOff();
+		DispatchSpawn(pLaser);
+		m_pLaser = pLaser;
+	}
+
+	CEnvPortalLaser* pLaser = dynamic_cast<CEnvPortalLaser*>(m_pLaser);
+
+	if (state == true) {
+		pLaser->TurnOn();
+	}
+	else if (state == false) {
+		pLaser->TurnOff();
+	}
 }
 
 void CPropWeightedCube::InputPreDissolveJoke(inputdata_t& data)

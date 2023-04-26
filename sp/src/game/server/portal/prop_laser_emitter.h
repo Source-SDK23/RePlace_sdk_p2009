@@ -5,6 +5,7 @@
 #include "Sprite.h"
 
 #include "prop_laser_catcher.h"
+#include "prop_weightedcube.h"
 
 /**
  * @brief Thermal Discouragement Beam Entity
@@ -12,6 +13,7 @@
 class CEnvPortalLaser : public CBaseEntity {
 public:
 	DECLARE_CLASS(CEnvPortalLaser, CBaseEntity);
+	DECLARE_DATADESC();
 
 	CEnvPortalLaser();
 	~CEnvPortalLaser();
@@ -45,10 +47,10 @@ private:
 
 	CFuncLaserDetector* m_pCatcher;
 
+	CPropWeightedCube* m_pCube;
+
 	float m_fHurnSoundTime, m_fPlayerDamage;
 	int m_iSprite;
-
-	DECLARE_DATADESC();
 };
 
 class CPropLaserEmitter : public CDynamicProp {
