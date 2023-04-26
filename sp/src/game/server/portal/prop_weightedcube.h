@@ -17,6 +17,16 @@
 // context think
 #define UPDATE_THINK_CONTEXT	"UpdateThinkContext"
 ;
+
+enum CubeType
+{
+	Standard = 0,
+	Companion = 1,
+	Reflective,
+	Sphere,
+	Antique,
+};
+
 class CPropWeightedCube : public CPhysicsProp
 {
 public:

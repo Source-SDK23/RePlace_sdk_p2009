@@ -18,15 +18,6 @@
 
 #define FIZZLE_SOUND		"Prop.Fizzled"
 
-enum CubeType
-{
-	Standard = 0,
-	Companion = 1,
-	Reflective,
-	Sphere,
-	Antique,
-};
-
 enum SkinOld
 {
 	OLDStandard = 0,
@@ -240,9 +231,9 @@ void CPropWeightedCube::ToggleLaser(bool state)
 		pLaser->SetParent(this, 0);
 
 		// For Portal2-SDK13 Asset
-		//pLaser->SetLocalOrigin(Vector(0, 0, 1)); // Offset the laser forwards from the bone by 1 unit so it doesn't collide with the cube
-		//pLaser->SetLocalAngles(QAngle(-90, 0, 0)); // Laser rotation is off, this may not be the case in p2009's model, check before merging
-		
+		pLaser->SetLocalAngles(QAngle(0, 0, 90)); // Laser rotation is off, this may not be the case in p2009's model, check before merging
+		pLaser->SetLocalOrigin(Vector(25, 0, 0)); // Offset the laser forwards from the bone by 1 unit so it doesn't collide with the cube
+
 		pLaser->TurnOff();
 		DispatchSpawn(pLaser);
 		m_pLaser = pLaser;

@@ -204,10 +204,11 @@ void CEnvPortalLaser::LaserThink() {
 				}
 
 				CPropWeightedCube* pCube = dynamic_cast<CPropWeightedCube*>(tr.m_pEnt);
+
 				// Check if casting to cube successed
 				if (pCube) {
-					// Check if the cube is different
-					if (m_pCube != pCube) {
+					// Check if the cube is reflective AND different from old one
+					if (pCube->GetCubeType() == Reflective && m_pCube != pCube) {
 						// Deactivate the old cube
 						if (m_pCube != NULL) {
 							m_pCube->ToggleLaser(false);
@@ -218,8 +219,9 @@ void CEnvPortalLaser::LaserThink() {
 						m_pCube = pCube;
 					}
 				}
-				// Don't display impact sparks on cubes.
-				bSparks = false;
+
+				// Don't display impact sparks on cubes ONLY if the cube is reflective.
+				bSparks = (pCube->GetCubeType() != Reflective);
 			}
 
 			// Check if we hit a turret
