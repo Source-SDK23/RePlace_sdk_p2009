@@ -18,6 +18,16 @@
 // context think
 #define UPDATE_THINK_CONTEXT	"UpdateThinkContext"
 ;
+
+enum CubeType
+{
+	Standard = 0,
+	Companion = 1,
+	Reflective,
+	Sphere,
+	Antique,
+};
+
 class CPropWeightedCube : public CPhysicsProp
 {
 public:
@@ -69,7 +79,7 @@ private:
 	bool m_useNewSkins;
 	bool m_allowFunnel;
 
-	//CEnvPortalLaser* m_pLaser;
+	CBaseEntity* m_pLaser;
 
 	CHandle<CBasePlayer> m_hPhysicsAttacker;
 
