@@ -375,5 +375,11 @@ $Project "Server (Portal)"
 				$File	"$SRCDIR\game\shared\portal\weapon_portalgun_shared.h"
 			}
 		}
+
+		$Folder "FStop"
+		{
+			$File	"fstop\weapon_camera.h"
+			$File	"fstop\weapon_camera.cpp"
+		}
 	}
 }

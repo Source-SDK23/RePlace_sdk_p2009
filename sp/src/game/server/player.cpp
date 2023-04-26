@@ -6544,6 +6544,8 @@ void CBasePlayer::CheatImpulseCommands( int iImpulse )
 #ifdef HL2_EPISODIC
 		// GiveNamedItem( "weapon_magnade" );
 #endif
+		GiveNamedItem( "weapon_camera" );
+
 		if ( GetHealth() < 100 )
 		{
 			TakeHealth( 25, DMG_GENERIC );
