@@ -568,12 +568,11 @@ void MapbaseRPC_GetDiscordParameters( DiscordRichPresence &discordPresence, int 
 	// Generic Mapbase logo. Specific to the Mapbase Discord application.
 	//discordPresence.smallImageKey = "mb_logo_general";
 	//discordPresence.smallImageText = "Mapbase";
-	discordPresence.smallImageKey = "";
+	discordPresence.smallImageKey = "replace_logo_general";
 	discordPresence.smallImageText = "RePlace";
 
-	discordPresence.largeImageKey = cl_discord_largeimage.GetString();
-	//discordPresence.largeImageText = cl_discord_largeimage_text.GetString();
-	discordPresence.largeImageText = details;
+	discordPresence.largeImageKey = details;
+	discordPresence.largeImageText = cl_discord_largeimage_text.GetString();
 }
 
 void MapbaseRPC_UpdateDiscord( int iType, const char *pMapName )
