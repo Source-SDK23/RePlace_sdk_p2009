@@ -18,6 +18,7 @@ $Project "client"
 	"game\client\client_hl2.vpc"		[($WIN32||$X360||$POSIX) && $HL2]
 	"game\client\client_episodic.vpc"	[($WIN32||$X360||$POSIX) && $EPISODIC]
 	"game\client\client_portal.vpc"		[($WIN32||$X360||$POSIX) && $PORTAL]
+	"game\client\client_fstop.vpc"		[($WIN32||$X360||$POSIX) && $FSTOP]
 }
 
 $Project "fgdlib"
@@ -46,6 +47,7 @@ $Project "server"
 	"game\server\server_hl2.vpc"		[($WIN32||$X360||$POSIX) && $HL2]
 	"game\server\server_episodic.vpc"	[($WIN32||$X360||$POSIX) && $EPISODIC]
 	"game\server\server_portal.vpc"		[($WIN32||$X360||$POSIX) && $PORTAL]
+	"game\server\server_fstop.vpc"		[($WIN32||$X360||$POSIX) && $FSTOP]
 }
 
 $Project "responserules"
