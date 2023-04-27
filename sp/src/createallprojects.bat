@@ -1,2 +1,2 @@
-devtools\bin\vpc.exe /portal +everything /mksln everything_p2009.sln
+devtools\bin\vpc.exe /fstop +everything /mksln everything_fstop.sln
 pause

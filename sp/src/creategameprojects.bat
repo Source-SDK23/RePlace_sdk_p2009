@@ -1,2 +1,2 @@
-devtools\bin\vpc.exe /portal +game /mksln games_p2009.sln
+devtools\bin\vpc.exe /fstop +game /mksln games_fstop.sln
 pause

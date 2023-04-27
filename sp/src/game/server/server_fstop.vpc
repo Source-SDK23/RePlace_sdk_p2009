@@ -5,8 +5,8 @@
 //-----------------------------------------------------------------------------
 
 $Macro SRCDIR		"..\.."
-$Macro GAMENAME 	"portal" [!$SOURCESDK]
-$Macro GAMENAME 	"p2009" [$SOURCESDK]
+$Macro GAMENAME 	"FStop" [!$SOURCESDK]
+$Macro GAMENAME 	"RePlace" [$SOURCESDK]
 
 $Include "$SRCDIR\game\server\server_paint.vpc"
 
@@ -14,12 +14,12 @@ $Configuration
 {
 	$Compiler
 	{
-		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\portal;.\hl2;.\episodic;$SRCDIR\game\shared\Multiplayer;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\portal;.\portal"
-		$PreprocessorDefinitions		"$BASE;PORTAL;HL2_DLL;HL2_EPISODIC;USES_SAVERESTORE"
+		$AdditionalIncludeDirectories	"$BASE;$SRCDIR\game\shared\portal;.\hl2;.\episodic;$SRCDIR\game\shared\Multiplayer;$SRCDIR\game\shared\hl2;$SRCDIR\game\shared\portal;.\portal;.\fstop"
+		$PreprocessorDefinitions		"$BASE;FSTOP;PORTAL;HL2_DLL;HL2_EPISODIC;USES_SAVERESTORE"
 	}
 }
 
-$Project "Server (Portal)"
+$Project "Server (FStop)"
 {
 	$Folder	"Source Files"
 	{
@@ -374,6 +374,12 @@ $Project "Server (Portal)"
 				$File	"$SRCDIR\game\shared\portal\weapon_portalgun_shared.cpp"
 				$File	"$SRCDIR\game\shared\portal\weapon_portalgun_shared.h"
 			}
+		}
+
+		$Folder "FStop"
+		{
+			$File	"fstop\weapon_camera.h"
+			$File	"fstop\weapon_camera.cpp"
 		}
 	}
 }

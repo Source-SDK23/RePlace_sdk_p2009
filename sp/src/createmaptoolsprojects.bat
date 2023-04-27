@@ -1,2 +1,2 @@
-devtools\bin\vpc.exe +maptools /mksln maptools_p2009.sln
+devtools\bin\vpc.exe +maptools /mksln maptools_fstop.sln
 pause

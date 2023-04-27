@@ -28,7 +28,7 @@ $Group "game"
 	"vgui_surfacelib"
 	"vscript"
 	"vtf"
-	"vdbugreporter" //WIP
+//	"vdbugreporter" //WIP
 	"responserules"
 }
 
@@ -68,7 +68,7 @@ $Group "everything"
 	"vgui_dll"
 	"vgui_surfacelib"
 	"vice"
-	"vdbugreporter" //WIP
+//	"vdbugreporter" //WIP
 	"vrad_dll"
 	"vrad_launcher"
 	"vscript"
