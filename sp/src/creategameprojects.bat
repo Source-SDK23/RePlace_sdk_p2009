@@ -1,1 +1,1 @@
-devtools\bin\vpc.exe /portal +game /mksln games.sln
+devtools\bin\vpc.exe /fstop +game /mksln games.sln

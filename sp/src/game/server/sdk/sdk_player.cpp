@@ -337,6 +337,8 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 	GiveNamedItem( "weapon_grenade" );
 	GiveNamedItem( "weapon_shotgun" );
 
+	GiveNamedItem( "weapon_camera" );
+
 	// Give the player everything!
 	GiveAmmo( 90, AMMO_BULLETS );
 	GiveAmmo( 3, AMMO_GRENADE );

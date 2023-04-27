@@ -1,1 +1,1 @@
-devtools\bin\vpc.exe /portal +everything /mksln everything.sln
+devtools\bin\vpc.exe /fstop +everything /mksln everything.sln
