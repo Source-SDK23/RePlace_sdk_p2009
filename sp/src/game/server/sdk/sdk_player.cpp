@@ -340,6 +340,8 @@ void CSDKPlayer::CheatImpulseCommands( int iImpulse )
 	// Give the player everything!
 	GiveAmmo( 90, AMMO_BULLETS );
 	GiveAmmo( 3, AMMO_GRENADE );
+
+	GiveNamedItem( "weapon_camera" );
 	
 	if ( GetHealth() < 100 )
 	{
