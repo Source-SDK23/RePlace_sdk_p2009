@@ -19,7 +19,7 @@ using namespace vgui;
 
 DECLARE_HUDELEMENT( CHudMaptag );
 
-static ConVar show_beta("p29_show_maptag", "1", 0, "Toggle Project 2009 Dev Map Info");
+static ConVar show_beta("p29_show_maptag", "0", 0, "Toggle Project 2009 Dev Map Info");
 
 CHudMaptag::CHudMaptag( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudMaptag" )
 {

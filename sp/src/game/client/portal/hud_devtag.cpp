@@ -16,7 +16,7 @@ using namespace vgui;
 
 DECLARE_HUDELEMENT( CHudDevtag );
 
-static ConVar show_beta("p29_show_devtag", "1", 0, "Toggle Project 2009 Watermark");
+static ConVar show_beta("p29_show_devtag", "0", 0, "Toggle Project 2009 Watermark");
 
 CHudDevtag::CHudDevtag( const char *pElementName ) : CHudElement( pElementName ), BaseClass( NULL, "HudDevtag" )
 {
