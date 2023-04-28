@@ -48,8 +48,9 @@ public:
 	float			GetModelHeight(void) { return modelHeight; }
 
 
-	void			CaptureEntity();
-	void			RestoreEntity();
+	void			CaptureEntity(void);
+	void			RestoreEntity(bool solidify=true);
+	void			HideEntity(void);
 
 private:
 	EHANDLE			entity;
