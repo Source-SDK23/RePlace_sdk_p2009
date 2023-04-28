@@ -21,11 +21,9 @@ enum CameraState {
 };
 
 struct CameraEntity {
-	DECLARE_SIMPLE_DATADESC();
-
 	CHandle<CBaseEntity> entity;
-	int moveType;
-	int solidType;
+	MoveType_t moveType;
+	SolidType_t solidType;
 	int effects;
 	double modelRadius;
 	double modelHeight;
@@ -50,6 +48,13 @@ public:
 	int		CapabilitiesGet(void) { return bits_CAP_WEAPON_RANGE_ATTACK1; };
 
 	void	ItemPostFrame(void);
+
+	void	PlacementThink(void);
+
+
+	void	SetSlot(int slot); // Set camera slot
+	void	ChangeScale(bool scaleUp); // Change placement scale
+	int		GetState(void);
 
 	typedef CUtlMap<int, CBaseEntity*> CMemMap;
 private:

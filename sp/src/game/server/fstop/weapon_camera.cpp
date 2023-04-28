@@ -45,6 +45,39 @@ END_SEND_TABLE()
 LINK_ENTITY_TO_CLASS( weapon_camera, CWeaponCamera );
 PRECACHE_WEAPON_REGISTER( weapon_camera );
 
+
+// Command to switch camera slot
+void SwitchCameraSlot_f( const CCommand& args ) {
+	if (args.ArgC() < 1 || *args.Arg(1) == *"")
+	{
+		Msg("Usage: camera_slot <slot#>\n");
+		return;
+	}
+
+	CBasePlayer* pOwner = ToBasePlayer(UTIL_GetCommandClient());
+	CWeaponCamera* cameraWeapon = dynamic_cast<CWeaponCamera*>(pOwner->Weapon_OwnsThisType("weapon_camera"));
+
+	cameraWeapon->SetSlot(atoi(args.Arg(1)));
+}
+ConCommand switchCameraSlot("camera_slot", SwitchCameraSlot_f, "camera_slot <slot#>");
+
+// Command to scale object
+void ChangeCameraScale_f(const CCommand& args) {
+	if (args.ArgC() < 1 || *args.Arg(1) == *"")
+	{
+		Msg("Usage: camera_slot <slot#>\n");
+		return;
+	}
+
+	CBasePlayer* pOwner = ToBasePlayer(UTIL_GetCommandClient());
+	CWeaponCamera* cameraWeapon = dynamic_cast<CWeaponCamera*>(pOwner->Weapon_OwnsThisType("weapon_camera"));
+
+	cameraWeapon->ChangeScale(atoi(args.Arg(1)) == 1 ? true : false);
+}
+ConCommand changeCameraScale("camera_scale", ChangeCameraScale_f, "camera_scale <scale type>");
+
+
+
 //-----------------------------------------------------------------------------
 // Purpose: Precache
 //-----------------------------------------------------------------------------
@@ -64,12 +97,31 @@ void CWeaponCamera::Precache( void )
 CWeaponCamera::CWeaponCamera(void)
 {
 	m_flNextSecondaryAttack = gpGlobals->curtime;
+	m_current_inventory_slot = 0;
 	m_buttonPressed = false;
+	SetThink(NULL); // No think, just do
 }
 
-//====================================================================================
-// WEAPON BEHAVIOUR
-//====================================================================================
+int CWeaponCamera::GetState(void)
+{
+	return m_cameraState;
+}
+
+void CWeaponCamera::SetSlot(int slot)
+{
+	m_current_inventory_slot = slot;
+
+	Msg("Slot Changed");
+	if (m_cameraState != CAMERA_PLACEMENT) {
+		SecondaryAttack();
+	}
+
+	// TODO
+}
+
+//-----------------------------------------------------------------------------
+// Keyboard input callback
+//-----------------------------------------------------------------------------
 void CWeaponCamera::ItemPostFrame(void)
 {
 	CBasePlayer* pOwner = ToBasePlayer(GetOwner()); // Get player
@@ -115,8 +167,17 @@ void CWeaponCamera::ItemPostFrame(void)
 	}
 }
 
+
 //-----------------------------------------------------------------------------
-// Purpose: Main attack
+// Purpose: Handle placement logic as "think"
+//-----------------------------------------------------------------------------
+void CWeaponCamera::PlacementThink(void) {
+	SetNextThink(gpGlobals->curtime + 0.01f);
+}
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Main attack (capture)
 //-----------------------------------------------------------------------------
 void CWeaponCamera::PrimaryAttack( void )
 {
@@ -125,6 +186,9 @@ void CWeaponCamera::PrimaryAttack( void )
 	CBasePlayer* pOwner = ToBasePlayer(GetOwner()); // Get player
 	if (!pOwner)
 		return;
+
+	Vector dir;
+	trace_t tr;
 
 	switch (m_cameraState) {
 	case CAMERA_NORMAL:
@@ -142,10 +206,8 @@ void CWeaponCamera::PrimaryAttack( void )
 		}
 
 		// Traceline
-		Vector dir;
+		
 		AngleVectors(pOwner->EyeAngles(), &dir);
-
-		trace_t tr;
 		UTIL_TraceLine(pOwner->EyePosition(), pOwner->EyePosition() + (dir * MAX_TRACE_LENGTH), MASK_SOLID, pOwner, COLLISION_GROUP_NONE, &tr);
 
 
@@ -154,34 +216,41 @@ void CWeaponCamera::PrimaryAttack( void )
 			Msg(tr.m_pEnt->GetClassname());
 			Msg(tr.m_pEnt->GetEntityName().ToCStr());
 
-			Vector modelSize = tr.m_pEnt->CollisionProp()->OBBMaxs() - tr.m_pEnt->CollisionProp()->OBBMins();
+			CBaseEntity* baseEntity = dynamic_cast<CBaseEntity*>(tr.m_pEnt);
+
+			Vector modelSize = baseEntity->CollisionProp()->OBBMaxs() - baseEntity->CollisionProp()->OBBMins();
 			double modelRadius = sqrt(pow(modelSize.x, 2) + pow(modelSize.y, 2));
 			double modelHeight = modelSize.z;
 
 			// Get Entity Info
 			CameraEntity entityData = {
-				tr.m_pEnt->GetRefEHandle(),			// Get entity handle
-				tr.m_pEnt->GetMoveType(),			// Original Movement Type
-				tr.m_pEnt->GetSolid(),				// Original solid type
-				tr.m_pEnt->GetEffects(),			// Original effects
+				baseEntity,			// Get entity handle
+				baseEntity->GetMoveType(),			// Original Movement Type
+				baseEntity->GetSolid(),				// Original solid type
+				baseEntity->GetEffects(),			// Original effects
 				modelRadius,						// Model Radius
 				modelHeight							// Model Height
 			};
 
 			// Disable collision
-			tr.m_pEnt->SetMoveType(MOVETYPE_NONE); // No physics movement at all
-			tr.m_pEnt->SetSolid(SOLID_NONE); // Wouldn't want it to hit anything
-			tr.m_pEnt->AddEffects(EF_NODRAW); // Performance purposes
+			baseEntity->SetMoveType(MOVETYPE_NONE); // No physics movement at all
+			baseEntity->SetSolid(SOLID_NONE); // Wouldn't want it to hit anything
+			baseEntity->AddEffects(EF_NODRAW); // Performance purposes
 
-			tr.m_pEnt->SetAbsOrigin(Vector(3000, 3000, 3000)); // Teleport away
+			//baseEntity->SetAbsOrigin(Vector(3000, 3000, 3000)); // Teleport away
 
 			// Add entity to inventory
 			m_inventory.AddToTail(&entityData);
 		}
-
+		break;
+	
+	case CAMERA_PLACEMENT:
+		SetThink(NULL); // Placement succeeds
+		// TODO
 		break;
 	}
 }
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
@@ -208,8 +277,32 @@ void CWeaponCamera::SecondaryAttack( void )
 	trace_t tr;
 	UTIL_TraceLine(pOwner->EyePosition(), pOwner->EyePosition() + (dir * MAX_TRACE_LENGTH), MASK_ALL, pOwner, COLLISION_GROUP_NONE, &tr);
 
-	Vector e = tr.startpos + ((tr.endpos - tr.startpos)*tr.fraction);
+	//int radiusOffset = m_inventory[m_current_inventory_slot]->modelRadius;
+
+	// Make item visible again
+	CBaseEntity* entityThing = dynamic_cast<CBaseEntity*>(m_inventory[m_current_inventory_slot]->entity.Get());
+	Msg("Entity obtained:");
+
+	Msg("Entity info:");
+	Msg(entityThing->GetClassname());
+	Msg(entityThing->GetEntityNameAsCStr());
+	
+	//entity->SetAbsOrigin(tr.endpos); // Move entity to ray hit location
+	//entity->SetEffects(m_inventory[m_current_inventory_slot]->effects);
+	//entity->SetSolid(m_inventory[m_current_inventory_slot]->solidType);
+	//entity->SetMoveType(m_inventory[m_current_inventory_slot]->moveType);
 }
+
+
+//-----------------------------------------------------------------------------
+// Purpose: Change placement scale
+//-----------------------------------------------------------------------------
+void CWeaponCamera::ChangeScale(bool scaleType)
+{
+
+}
+
+
 
 //-----------------------------------------------------------------------------
 // Purpose: 
