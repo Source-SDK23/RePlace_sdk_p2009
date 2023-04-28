@@ -610,3 +610,8 @@ sp/src/utils/sapi51/Tools/Comp/TTS/ttscomp.h
 sp/src/utils/sapi51/Tools/Comp/TTS/ttscomp.rc
 sp/src/utils/sapi51/Tools/Comp/TTS/ttsmarkup.cpp
 sp/src/utils/sapi51/Tools/Comp/TTS/version.rc2
+
+sp/src/lib/public/mathlib.lib
+sp/src/lib/public/raytrace.lib
+sp/src/lib/public/tier1.lib
+sp/src/lib/public/vgui_controls.lib
