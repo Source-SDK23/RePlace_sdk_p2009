@@ -201,7 +201,8 @@ $Project "Client (FStop)"
 
 		$Folder "FStop"
 		{
-			
+			$File	"fstop\camera_zoom.cpp"
+			$File	"fstop\camera_zoom.h"
 		}
 	}
 }

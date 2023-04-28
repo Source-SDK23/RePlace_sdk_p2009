@@ -20,13 +20,46 @@ enum CameraState {
 	CAMERA_PLACEMENT
 };
 
-struct CameraEntity {
-	CHandle<CBaseEntity> entity;
-	MoveType_t moveType;
-	SolidType_t solidType;
-	int effects;
-	double modelRadius;
-	double modelHeight;
+class CameraEntity
+{
+public:
+
+	DECLARE_SIMPLE_DATADESC();
+
+	void			SetEntity(CBaseEntity* pEntity) { entity = pEntity; }
+	CBaseEntity*	GetEntity(void) { return entity.Get(); }
+
+	void			SetMoveType(MoveType_t pMoveType) { moveType = pMoveType; }
+	MoveType_t		GetMoveType(void) { return moveType; }
+
+	void			SetSolidType(SolidType_t pSolidType) { solidType = pSolidType; }
+	SolidType_t		GetSolidType(void) { return solidType; }
+
+	void			SetEffects(int pEffects) { effects = pEffects; }
+	int				GetEffects(void) { return moveType; }
+
+	void			SetAsleep(bool pAsleep) { asleep = pAsleep; }
+	bool			GetAsleep(void) { return asleep; }
+
+	void			SetModelRadius(float pModelRadius) { modelRadius = pModelRadius; }
+	float			GetModelRadius(void) { return modelRadius; }
+
+	void			SetModelHeight(float pModelHeight) { modelHeight = pModelHeight; }
+	float			GetModelHeight(void) { return modelHeight; }
+
+
+	void			CaptureEntity();
+	void			RestoreEntity();
+
+private:
+	EHANDLE			entity;
+	MoveType_t		moveType;
+	SolidType_t		solidType;
+	int				effects;
+	bool			asleep;
+
+	float			modelRadius;
+	float			modelHeight;
 };
 
 //---------------------
@@ -56,11 +89,13 @@ public:
 	void	ChangeScale(bool scaleUp); // Change placement scale
 	int		GetState(void);
 
+	void	SetZoom(bool zoomState);
+
 	typedef CUtlMap<int, CBaseEntity*> CMemMap;
 private:
 	CameraState		m_cameraState;
 	bool	m_buttonPressed; // For input
-	CUtlVector< CameraEntity* >	m_inventory;
+	CUtlVector< CameraEntity >	m_inventory;
 	int		m_current_inventory_slot;
 
 	DECLARE_DATADESC();
