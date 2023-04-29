@@ -249,7 +249,9 @@ void CPropWeightedCube::Spawn()
 			if (szSprite == NULL || Q_strlen(szSprite) == 0) {
 				szSprite = LASER_EMITTER_DEFAULT_SPRITE;
 			}
+
 			m_pLaserSprite->KeyValue("model", szSprite);
+			m_pLaserSprite->SetGlowProxySize(this->CollisionProp()->BoundingRadius()); // Set glow radius accordingly
 			m_pLaserSprite->Precache();
 			m_pLaserSprite->SetAbsOrigin(this->GetAbsOrigin());
 			m_pLaserSprite->SetAbsAngles(this->GetAbsAngles());

@@ -230,6 +230,7 @@ void CPropLaserCatcher::Spawn() {
 		m_pActivatedSprite->SetParent(this);
 		DispatchSpawn(m_pActivatedSprite);
 		m_pActivatedSprite->SetAbsOrigin(vecOrigin);
+		m_pActivatedSprite->SetGlowProxySize(this->CollisionProp()->BoundingRadius()); // Set glow radius accordingly
 		m_pActivatedSprite->SetRenderMode(kRenderWorldGlow);
 
 		m_pActivatedSprite->SetRenderColor(255, 255, 255);

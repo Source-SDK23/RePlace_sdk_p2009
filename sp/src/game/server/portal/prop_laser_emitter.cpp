@@ -13,6 +13,7 @@
 #include "prop_laser_catcher.h"
 
 #include "prop_weightedcube.h"
+#include "prop_schrodingercube.h"
 
 #define LASER_BEAM_SPRITE "sprites/purplelaser1.vmt"//"sprites/xbeam2.vmt"
 #define LASER_BEAM_WIDTH_CVAR "2"
@@ -59,6 +60,7 @@ BEGIN_DATADESC(CEnvPortalLaser)
 	DEFINE_FIELD(m_pBeamAfterPortal, FIELD_CLASSPTR),
 	DEFINE_FIELD(m_pCatcher, FIELD_CLASSPTR),
 	DEFINE_FIELD(m_pCube, FIELD_CLASSPTR),
+	DEFINE_FIELD(m_pSCube, FIELD_CLASSPTR),
 	DEFINE_FIELD(m_iSprite, FIELD_INTEGER),
 // Key fields
 	DEFINE_KEYFIELD(m_bStartActive, FIELD_BOOLEAN, "startactive"),
@@ -181,6 +183,10 @@ void CEnvPortalLaser::LaserThink() {
 			m_pCube->ToggleLaser(false); // Deactivate cube
 			m_pCube = NULL;
 		}
+		if (!FClassnameIs(tr.m_pEnt, "prop_schrodinger_cube") && m_pSCube != NULL) {
+			m_pSCube->PartnerSendLaser(false); // Deactivate SCube
+			m_pSCube = NULL;
+		}
 
 		// Check if we hit a laser detector
 		if (FClassnameIs(tr.m_pEnt, "func_laser_detect")) {
@@ -239,6 +245,33 @@ void CEnvPortalLaser::LaserThink() {
 
 				// Don't display impact sparks on cubes ONLY if the cube is reflective.
 				bSparks = (pCube->GetCubeType() != Reflective);
+			} else if (FClassnameIs(tr.m_pEnt, "prop_schrodinger_cube") && this->GetParent()->GetAbsOrigin() != tr.m_pEnt->GetAbsOrigin()) { // Check if we hit a cube and it isn't our parent
+				if (portal_laser_debug.GetBool()) {
+					NDebugOverlay::Cross3D(tr.endpos, 16, 0xFF, 0x00, 0x00, false, NDEBUG_PERSIST_TILL_NEXT_SERVER);
+				}
+
+				CPropSchrodingerCube* pSCube = dynamic_cast<CPropSchrodingerCube*>(tr.m_pEnt);
+
+				// Check if casting to cube successed
+				if (pSCube) {
+					// Deactivate the old cube if it exists and the new cube is different than the old one
+					if (m_pSCube != NULL && m_pSCube != pSCube) {
+						m_pSCube->PartnerSendLaser(false);
+						m_pSCube = NULL;
+					}
+
+					// Check if the cube is reflective AND different from old one
+					if (m_pSCube != pSCube) {
+						// Activate the new cube
+						if (pSCube->PartnerSendLaser(true, m_clrBeam.GetR(), m_clrBeam.GetG(), m_clrBeam.GetB(), m_clrSprite.GetR(), m_clrSprite.GetG(), m_clrSprite.GetB())) {
+							// Keep track of the new cube
+							m_pSCube = pSCube; // If laser wasn't already on, track new cube, otherwise ignore
+						}
+					}
+				}
+
+				// Quantum cubes eat sparks for breakfast
+				bSparks = false;
 			}
 
 			// Check if we hit a turret
@@ -544,6 +577,7 @@ void CPropLaserEmitter::Spawn() {
 		m_pLaserSprite->SetParent(this);
 		m_pLaserSprite->SetParentAttachment("SetParentAttachment", "laser_attachment", false);
 		DispatchSpawn(m_pLaserSprite);
+		m_pLaserSprite->SetGlowProxySize(this->CollisionProp()->BoundingRadius()); // Set glow radius accordingly
 		m_pLaserSprite->SetRenderMode(kRenderWorldGlow);
 		m_pLaserSprite->SetRenderColor(m_clrSprite.GetR(), m_clrSprite.GetG(), m_clrSprite.GetB());
 		m_pLaserSprite->SetScale(portal_laser_glow_sprite_scale.GetFloat());

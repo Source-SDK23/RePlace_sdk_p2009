@@ -357,6 +357,8 @@ $Project "Server (FStop)"
 			$File	"portal\prop_button.cpp"
 			$File	"portal\prop_testchamber_door.h"
 			$File	"portal\prop_testchamber_door.cpp"
+			$File	"portal\prop_schrodingercube.h"
+			$File	"portal\prop_schrodingercube.cpp"
 			$Folder	"Weapons"
 			{
 				$File	"$SRCDIR\game\server\hl2\weapon_gauss.cpp"

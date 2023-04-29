@@ -6,6 +6,7 @@
 
 #include "prop_laser_catcher.h"
 #include "prop_weightedcube.h"
+#include "prop_schrodingercube.h"
 
 /**
  * @brief Thermal Discouragement Beam Entity
@@ -52,6 +53,7 @@ private:
 
 	CFuncLaserDetector* m_pCatcher;
 	CPropWeightedCube* m_pCube;
+	CPropSchrodingerCube* m_pSCube;
 
 	CNetworkColor32(m_clrBeam);
 	CNetworkColor32(m_clrSprite);
