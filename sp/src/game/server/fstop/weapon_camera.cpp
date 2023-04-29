@@ -161,7 +161,11 @@ void CWeaponCamera::Precache( void )
 {
 	BaseClass::Precache();
 
-	//PrecacheScriptSound( "Flare.Touch" );
+	PrecacheScriptSound( "NPC_CScanner.TakePhoto" );
+	PrecacheScriptSound( "Metal_Box.ImpactSoft" );
+	PrecacheScriptSound( "NPC_Alyx.Climb_Pipe_strain_1" );
+	PrecacheScriptSound( "NPC_Alyx.Climb_Pipe_strain_2" );
+	PrecacheScriptSound( "Cardboard.ImpactSoft" );
 
 	//PrecacheScriptSound("Weapon_FlareGun.Burn");
 	//PrecacheScriptSound("Weapon_FlareGun.Single");
@@ -330,10 +334,15 @@ void CWeaponCamera::PrimaryAttack( void )
 	Vector dir;
 	trace_t tr;
 
+	CPASAttenuationFilter filter(this);
+
 	switch (m_cameraState) {
 	case CAMERA_NORMAL:
 		m_cameraState = CAMERA_ZOOM; // Switch to zoom mode
 		SetZoom(true);
+
+		//Play zoom sound
+		EmitSound(filter, entindex(), "Cardboard.ImpactSoft");
 		break;
 
 	case CAMERA_ZOOM:
@@ -370,6 +379,9 @@ void CWeaponCamera::PrimaryAttack( void )
 
 			// Add entity to inventory
 			m_inventory.AddToTail(entityData);
+
+			//Play capture sound
+			EmitSound(filter, entindex(), "NPC_CScanner.TakePhoto");
 		}
 		break;
 	
@@ -382,6 +394,9 @@ void CWeaponCamera::PrimaryAttack( void )
 		if (m_current_inventory_slot > 0) { // Switch inventory slot
 			m_current_inventory_slot -= 1;
 		}
+
+		//Play placement sound
+		EmitSound(filter, entindex(), "Metal_Box.ImpactSoft");
 		break;
 	}
 }
@@ -433,6 +448,17 @@ void CWeaponCamera::ChangeScale(bool scaleType)
 	}
 	if (m_cameraState != CAMERA_PLACEMENT) {
 		return; // Cannot scale outside of placement
+	}
+
+	if (scaleType) {
+		//Play scale up sound
+		CPASAttenuationFilter filter(this);
+		EmitSound(filter, entindex(), "NPC_Alyx.Climb_Pipe_strain_1");
+	}
+	else {
+		//Play scale down sound
+		CPASAttenuationFilter filter(this);
+		EmitSound(filter, entindex(), "NPC_Alyx.Climb_Pipe_strain_2");
 	}
 
 	Msg("Scaling item");
