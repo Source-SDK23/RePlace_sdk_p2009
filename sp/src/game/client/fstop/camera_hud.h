@@ -1,12 +1,12 @@
-class CCameraHUD : public vgui::Panel, public CHudElement
+class CCameraViewfinder : public vgui::Panel, public CHudElement
 {
-	DECLARE_CLASS_SIMPLE(CCameraHUD, vgui::Panel);
+	DECLARE_CLASS_SIMPLE(CCameraViewfinder, vgui::Panel);
 
 public:
-	CCameraHUD(const char* pElementName);
+	CCameraViewfinder(const char* pElementName);
 
 	void Init();
-	void MsgFunc_ShowHud(bf_read& msg);
+	void MsgFunc_ShowCameraViewfinder(bf_read& msg);
 
 protected:
 	virtual void ApplySchemeSettings(vgui::IScheme* scheme);
@@ -14,5 +14,6 @@ protected:
 
 private:
 	bool			m_bShow;
-	CHudTexture* m_pHud;
+	CHudTexture* m_pViewfinder_ul;
+	CHudTexture* m_pViewfinder_halfcircle;
 };

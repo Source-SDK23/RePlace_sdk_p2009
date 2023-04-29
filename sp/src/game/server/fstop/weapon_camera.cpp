@@ -166,6 +166,7 @@ void CWeaponCamera::Precache( void )
 	PrecacheScriptSound( "NPC_Alyx.Climb_Pipe_strain_1" );
 	PrecacheScriptSound( "NPC_Alyx.Climb_Pipe_strain_2" );
 	PrecacheScriptSound( "Cardboard.ImpactSoft" );
+	PrecacheScriptSound( "SolidMetal.StepRight" );
 
 	//PrecacheScriptSound("Weapon_FlareGun.Burn");
 	//PrecacheScriptSound("Weapon_FlareGun.Single");
@@ -233,11 +234,17 @@ void CWeaponCamera::SetZoom(bool zoomState)
 
 	Msg("Setting zoom");
 	if (zoomState) {
-		pOwner->SetFOV(this, 15, 0.1f);
+		pOwner->SetFOV(this, 30, 0.1f);
 	}
 	else {
 		pOwner->SetFOV(this, 0, 0.2f);
 	}
+
+	// Send a message to hide the scope
+	CSingleUserRecipientFilter filter(pOwner);
+	UserMessageBegin(filter, "ShowCameraViewfinder");
+	WRITE_BYTE(zoomState ? 1 : 0);
+	MessageEnd();
 }
 
 
@@ -432,6 +439,9 @@ void CWeaponCamera::SecondaryAttack( void )
 		}
 	}
 
+	CPASAttenuationFilter filter(this);
+	EmitSound(filter, entindex(), "SolidMetal.StepRight");
+
 	m_cameraState = CAMERA_PLACEMENT; // Set placement state
 	SetThink(&CWeaponCamera::PlacementThink);
 	SetNextThink(gpGlobals->curtime);
@@ -450,16 +460,7 @@ void CWeaponCamera::ChangeScale(bool scaleType)
 		return; // Cannot scale outside of placement
 	}
 
-	if (scaleType) {
-		//Play scale up sound
-		CPASAttenuationFilter filter(this);
-		EmitSound(filter, entindex(), "NPC_Alyx.Climb_Pipe_strain_1");
-	}
-	else {
-		//Play scale down sound
-		CPASAttenuationFilter filter(this);
-		EmitSound(filter, entindex(), "NPC_Alyx.Climb_Pipe_strain_2");
-	}
+	CPASAttenuationFilter filter(this);
 
 	Msg("Scaling item");
 
@@ -468,6 +469,15 @@ void CWeaponCamera::ChangeScale(bool scaleType)
 	if (baseEntity->GetModelScale() == (scaleType ? CAMERA_MAX_SCALE : CAMERA_MIN_SCALE)) { // Check if already at max/min scale for that "scale direction"
 		Msg("Cannot scale further");
 		return;
+	}
+
+	if (scaleType) {
+		//Play scale up sound
+		EmitSound(filter, entindex(), "NPC_Alyx.Climb_Pipe_strain_1");
+	}
+	else {
+		//Play scale down sound
+		EmitSound(filter, entindex(), "NPC_Alyx.Climb_Pipe_strain_2");
 	}
 
 	float targetScale = baseEntity->GetModelScale() + (scaleType ? CAMERA_SCALE_STEP : -CAMERA_SCALE_STEP);

@@ -64,6 +64,9 @@ void RegisterUserMessages()
 	usermessages->Register( "VoteFailed", 2 );
 	usermessages->Register( "VoteSetup", -1 );  // Initiates client-side voting UI
 
+	// FStop HUD
+	usermessages->Register("ShowCameraViewfinder", 1); // show the camera viewfinder
+
 	// NVNT register haptic user messages
 	RegisterHapticMessages();
 }
