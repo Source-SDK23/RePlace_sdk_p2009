@@ -18,6 +18,15 @@
 
 #define FIZZLE_SOUND		"Prop.Fizzled"
 
+#define LASER_EMITTER_DEFAULT_SPRITE "sprites/light_glow02_add.vmt"//"sprites/purpleglow1.vmt"
+#define LASER_SPRITE_COLOUR 255, 64, 64
+
+// CVar for visuals
+// TODO: Finialize visuals and use macros/constants instead!
+extern ConVar portal_laser_glow_sprite_colour;
+extern ConVar portal_laser_glow_sprite;
+extern ConVar portal_laser_glow_sprite_scale;
+
 enum SkinOld
 {
 	OLDStandard = 0,
@@ -54,6 +63,7 @@ BEGIN_DATADESC(CPropWeightedCube)
 DEFINE_USEFUNC(Use),
 
 DEFINE_FIELD(m_pLaser, FIELD_CLASSPTR),
+DEFINE_FIELD(m_pLaserSprite, FIELD_CLASSPTR),
 
 //DEFINE_KEYFIELD(m_oldSkin, FIELD_INTEGER, "skin"),
 DEFINE_KEYFIELD(m_cubeType, FIELD_INTEGER, "CubeType"),
@@ -232,20 +242,52 @@ void CPropWeightedCube::ToggleLaser(bool state)
 
 		// For Portal2-SDK13 Asset
 		pLaser->SetLocalAngles(QAngle(0, 0, 90)); // Laser rotation is off, this may not be the case in p2009's model, check before merging
-		pLaser->SetLocalOrigin(Vector(25, 0, 0)); // Offset the laser forwards from the bone by 1 unit so it doesn't collide with the cube
+		pLaser->SetLocalOrigin(Vector(25, 0, 0)); // Offset the laser forwards from the bone by 25 units so it doesn't collide with the cube
 
 		pLaser->TurnOff();
 		DispatchSpawn(pLaser);
 		m_pLaser = pLaser;
 	}
 
+	if (m_pLaserSprite == nullptr) {
+		// Create glow
+		m_pLaserSprite = dynamic_cast<CSprite*>(CreateEntityByName("env_sprite"));
+		if (m_pLaserSprite != NULL) {
+			const char* szSprite = portal_laser_glow_sprite.GetString();
+			if (szSprite == NULL || Q_strlen(szSprite) == 0) {
+				szSprite = LASER_EMITTER_DEFAULT_SPRITE;
+			}
+			m_pLaserSprite->KeyValue("model", szSprite);
+			m_pLaserSprite->Precache();
+			m_pLaserSprite->SetAbsOrigin(this->GetAbsOrigin());
+			m_pLaserSprite->SetAbsAngles(this->GetAbsAngles());
+			m_pLaserSprite->SetParent(this, 0);
+			DispatchSpawn(m_pLaserSprite);
+			m_pLaserSprite->SetRenderMode(kRenderWorldGlow);
+			const char* szColor = portal_laser_glow_sprite_colour.GetString();
+			if (szColor != NULL && Q_strlen(szColor) > 0) {
+				int r, g, b;
+				sscanf(szColor, "%i%i%i", &r, &g, &b);
+				m_pLaserSprite->SetRenderColor(r, g, b);
+			}
+			else {
+				m_pLaserSprite->SetRenderColor(LASER_SPRITE_COLOUR);
+			}
+			m_pLaserSprite->SetScale(portal_laser_glow_sprite_scale.GetFloat());
+
+			m_pLaserSprite->TurnOff();
+		}
+	}
+
 	CEnvPortalLaser* pLaser = dynamic_cast<CEnvPortalLaser*>(m_pLaser);
 
 	if (state == true) {
 		pLaser->TurnOn();
+		m_pLaserSprite->TurnOn();
 	}
 	else if (state == false) {
 		pLaser->TurnOff();
+		m_pLaserSprite->TurnOff();
 	}
 }
 

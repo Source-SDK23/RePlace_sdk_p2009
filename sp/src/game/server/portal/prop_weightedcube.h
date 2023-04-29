@@ -79,6 +79,7 @@ private:
 	bool m_allowFunnel;
 
 	CBaseEntity* m_pLaser;
+	CSprite* m_pLaserSprite;
 
 	CHandle<CBasePlayer> m_hPhysicsAttacker;
 

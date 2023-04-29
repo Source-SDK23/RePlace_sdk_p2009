@@ -207,12 +207,14 @@ void CEnvPortalLaser::LaserThink() {
 
 				// Check if casting to cube successed
 				if (pCube) {
+					// Deactivate the old cube if it exists and the new cube is different than the old one
+					if (m_pCube != NULL && m_pCube != pCube) {
+						m_pCube->ToggleLaser(false);
+						m_pCube = NULL;
+					}
+
 					// Check if the cube is reflective AND different from old one
 					if (pCube->GetCubeType() == Reflective && m_pCube != pCube) {
-						// Deactivate the old cube
-						if (m_pCube != NULL) {
-							m_pCube->ToggleLaser(false);
-						}
 						// Activate the new cube
 						pCube->ToggleLaser(true);
 						// Keep track of the new cube
