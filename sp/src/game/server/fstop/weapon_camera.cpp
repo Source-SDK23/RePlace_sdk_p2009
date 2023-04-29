@@ -25,7 +25,7 @@
 static const int	CAMERA_MAX_INVENTORY = 3;
 static const int	CAMERA_MIN_SCALE = 0.25;
 static const int	CAMERA_MAX_SCALE = 2;
-static const float	CAMERA_SCALE_STEP = 0.5;
+static const float	CAMERA_SCALE_STEP = 0.25;
 static const char*	CAMERA_BLACKLIST[] = {
 	"worldspawn",
 	"prop_vehicle"
@@ -419,6 +419,7 @@ void CWeaponCamera::SecondaryAttack( void )
 
 	if (m_cameraState == CAMERA_ZOOM) {
 		SetZoom(false);
+		m_cameraState = CAMERA_NORMAL;
 	}
 
 	if (m_cameraState == CAMERA_PLACEMENT) { // Exit out of placement mode
@@ -466,7 +467,7 @@ void CWeaponCamera::ChangeScale(bool scaleType)
 
 	CBaseAnimating* baseEntity = dynamic_cast<CBaseAnimating*>(m_inventory[m_current_inventory_slot].GetEntity());
 
-	if (baseEntity->GetModelScale() == (scaleType ? CAMERA_MAX_SCALE : CAMERA_MIN_SCALE)) { // Check if already at max/min scale for that "scale direction"
+	if ((scaleType && baseEntity->GetModelScale() == CAMERA_MAX_SCALE) || (!scaleType && baseEntity->GetModelScale() == CAMERA_MIN_SCALE)) { // Check if already at max/min scale for that "scale direction"
 		Msg("Cannot scale further");
 		return;
 	}
@@ -492,7 +493,7 @@ void CWeaponCamera::ChangeScale(bool scaleType)
 	
 	//entityCollision->SetCollisionBounds()
 
-	m_next_scale_time = gpGlobals->curtime + 0.25;
+	m_next_scale_time = gpGlobals->curtime + 0.3;
 }
 
 

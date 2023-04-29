@@ -83,27 +83,31 @@ void CCameraViewfinder::Paint(void)
 		int width = GetWide(); // Width of player's screen resolution.
 		int height = GetTall(); // Height of player's screen resolution.
 
-		// Our scope's width must be 4/3 the height of the screen as that is how Valve designed the textures.
-		// This means that one quadrant will have a width exactly half of that, 2/3 the height of the screen.
 		int blockWidth = width / 2;
-		int blockHeight = height / 2; // Our scope blocks will each be half the height of the screen.
-
-		//surface()->DrawSetColor(Color(0, 0, 0, 255));
-		//surface()->DrawFilledRect(margin + 2 * x, 0, w, h); //Fill in the right side, it's offset horizontally by the width of one margin plus two scope block widths.
+		int blockHeight = height / 2; // Our HUD blocks will each be half the height of the screen.
 
 		// Source engine displays UI elements with an inverted-y axis.
 		// This means that the point (0,0) is located in the upper left corner of the screen and is why our lower scope blocks must be offset by y = h / 2.
-		//m_pViewfinder->DrawSelf(0, 0, blockWidth, blockHeight, Color(255, 255, 255, 255));
-		
-		// Draw circles
-		vgui::surface()->DrawSetColor(Color(0, 0, 0, 255));
-		vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, blockWidth / 5, 64);
-		vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, blockWidth / 3, 64);
-		vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, (blockWidth / 5)+1, 64);
-		vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, (blockWidth / 3)+1, 64);
-		vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, (blockWidth / 5)+2, 64);
-		vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, (blockWidth / 3)+2, 64);
 
+		vgui::surface()->DrawSetColor(Color(0, 0, 0, 255));
+		for (int i = 0; i < 3; i++) { // For loop for thickness of lines
+			// Draw circles
+			vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, (blockWidth / 5) + i, 128);
+			vgui::surface()->DrawOutlinedCircle(blockWidth, blockHeight, (blockWidth / 4) + i, 128);
+
+			// Draw corners
+			vgui::surface()->DrawLine(blockWidth / 4+i, blockHeight / 4, blockWidth / 4+i, blockHeight / 2); // UL
+			vgui::surface()->DrawLine(blockWidth / 4, blockHeight / 4+i, blockWidth / 4 + (blockHeight / 4), blockHeight / 4+i);
+
+			vgui::surface()->DrawLine(width - blockWidth / 4 - i, blockHeight / 4, width - blockWidth / 4 - i, blockHeight / 2); // UR
+			vgui::surface()->DrawLine(width - blockWidth / 4, blockHeight / 4+i, width - blockWidth / 4 - (blockHeight / 4), blockHeight / 4+i);
+
+			vgui::surface()->DrawLine(blockWidth / 4+i, height - blockHeight / 4, blockWidth / 4+i, height - blockHeight / 2); // LL
+			vgui::surface()->DrawLine(blockWidth / 4, height - blockHeight / 4-i, blockWidth / 4 + (blockHeight / 4), height - blockHeight / 4-i);
+
+			vgui::surface()->DrawLine(width - blockWidth / 4-i, height - blockHeight / 4, width - blockWidth / 4 - i, height - blockHeight / 2); // LR
+			vgui::surface()->DrawLine(width - blockWidth / 4, height - blockHeight / 4-i, width - blockWidth / 4 - (blockHeight / 4), height - blockHeight / 4 - i);
+		}
 
 
 		/////
@@ -122,10 +126,14 @@ void CCameraViewfinder::Paint(void)
 		// Draw main UI (has to be flipped with weird UV stuff)
 		vgui::surface()->DrawSetTexture(textureId);
 		vgui::surface()->DrawSetColor(Color(255, 255, 255, 255));
-		int x = blockWidth - m_pViewfinder_halfcircle->Width() / 2;
-		int y = blockHeight + m_pViewfinder_halfcircle->Height() / 2;
-		vgui::surface()->DrawTexturedSubRect(x, y, x+m_pViewfinder_halfcircle->Width(), y+m_pViewfinder_halfcircle->Height(),
+		int x = blockWidth - (m_pViewfinder_halfcircle->Width() / 2) / 2;
+		int y = blockHeight;
+		vgui::surface()->DrawTexturedSubRect(x, y, x+m_pViewfinder_halfcircle->Width()/2, y+m_pViewfinder_halfcircle->Height()/2,
 			texCoords[0], texCoords[3], texCoords[2], texCoords[1]);
+		vgui::surface()->DrawSetColor(Color(255, 255, 255, 64)); // Top half of circle, more opacity
+		y = blockHeight - m_pViewfinder_halfcircle->Height() / 2; // Update height for top half
+		vgui::surface()->DrawTexturedSubRect(x, y, x + m_pViewfinder_halfcircle->Width()/2, y + m_pViewfinder_halfcircle->Height()/2,
+			texCoords[0], texCoords[1], texCoords[2], texCoords[3]);
 
 		/////
 		// Calculate UV Stuff (m_pViewfinder_ul)
