@@ -25,12 +25,19 @@
 static const int	CAMERA_MAX_INVENTORY = 3;
 static const int	CAMERA_MIN_SCALE = 0.25;
 static const int	CAMERA_MAX_SCALE = 2;
+static const float	CAMERA_SCALE_STEP = 0.5;
+static const char*	CAMERA_BLACKLIST[] = {
+	"worldspawn",
+	"prop_vehicle"
+};
+static const int	CAMERA_BLACKLIST_LEN = 2;
 
 BEGIN_DATADESC(CWeaponCamera)
 
 	DEFINE_FIELD(m_buttonPressed, FIELD_BOOLEAN),
 	DEFINE_FIELD(m_cameraState, FIELD_INTEGER),
 	DEFINE_UTLVECTOR(m_inventory, FIELD_EMBEDDED),
+	DEFINE_FIELD(m_next_scale_time, FIELD_FLOAT),
 
 END_DATADESC()
 
@@ -39,7 +46,7 @@ BEGIN_SIMPLE_DATADESC(CameraEntity)
 	DEFINE_FIELD(moveType, FIELD_INTEGER),
 	DEFINE_FIELD(solidType, FIELD_INTEGER),
 	DEFINE_FIELD(effects, FIELD_INTEGER),
-	DEFINE_FIELD(asleep, FIELD_BOOLEAN),
+	DEFINE_FIELD(shouldWake, FIELD_BOOLEAN),
 	DEFINE_FIELD(modelRadius, FIELD_FLOAT),
 	DEFINE_FIELD(modelHeight, FIELD_FLOAT),
 END_DATADESC()
@@ -59,40 +66,32 @@ PRECACHE_WEAPON_REGISTER( weapon_camera );
 void CameraEntity::CaptureEntity(void) {
 	CBaseEntity* baseEntity = entity.Get();
 	Vector modelSize = baseEntity->CollisionProp()->OBBMaxs() - baseEntity->CollisionProp()->OBBMins();
-	modelRadius = sqrt(pow(modelSize.x, 2) + pow(modelSize.y, 2));
-	modelHeight = modelSize.z;
+	modelRadius = baseEntity->CollisionProp()->BoundingRadius();
 
 	moveType = baseEntity->GetMoveType();			// Original Movement Type
 	solidType = baseEntity->GetSolid();				// Original solid type
 	effects = baseEntity->GetEffects();				// Original effects
-	asleep = baseEntity->VPhysicsGetObject()->IsAsleep();	// Originally asleep
+	shouldWake = baseEntity->VPhysicsGetObject()->IsGravityEnabled() || baseEntity->VPhysicsGetObject()->IsMoveable();	// Originally asleep
 
-	// Teleport OOB (with any luck)
-	baseEntity->SetAbsOrigin(Vector(3000, 3000, 3000));
-
-	// Update collider location
-	baseEntity->VPhysicsGetObject()->SetPosition(baseEntity->GetAbsOrigin(), baseEntity->GetAbsAngles(), true);
-	baseEntity->VPhysicsUpdate(baseEntity->VPhysicsGetObject());
-
-	HideEntity();
+	HideEntity(); // Hides the entity
 }
 
 void CameraEntity::RestoreEntity(bool solidify) {
 	CBaseEntity* baseEntity = entity.Get();
+
+	// Update collider location
+	baseEntity->VPhysicsGetObject()->SetPosition(baseEntity->GetAbsOrigin(), baseEntity->GetAbsAngles(), true);
+	baseEntity->VPhysicsUpdate(baseEntity->VPhysicsGetObject());
+	baseEntity->VPhysicsShadowUpdate(baseEntity->VPhysicsGetObject());
 
 	if (solidify) {
 		// Restore data
 		baseEntity->SetSolid(solidType);
 		baseEntity->SetMoveType(moveType);
 
-		// Update collider location
-		baseEntity->VPhysicsGetObject()->SetPosition(baseEntity->GetAbsOrigin(), baseEntity->GetAbsAngles(), true);
-		baseEntity->VPhysicsUpdate(baseEntity->VPhysicsGetObject());
-
-		if (!asleep) {
+		if (shouldWake) {
 			baseEntity->VPhysicsGetObject()->Wake(); // Enable 
 		}
-		baseEntity->VPhysicsGetObject()->Wake();
 	}
 
 	baseEntity->SetEffects(effects);
@@ -104,6 +103,13 @@ void CameraEntity::HideEntity(void) {
 	baseEntity->SetMoveType(MOVETYPE_NONE); // No physics movement at all
 	baseEntity->SetSolid(SOLID_NONE); // Wouldn't want it to hit anything
 	baseEntity->AddEffects(EF_NODRAW); // NODRAW for performance purposes
+
+	// Teleport to OOB (with any luck)
+	baseEntity->SetAbsOrigin(Vector(3000, 3000, 3000));
+
+	// Update collider location
+	baseEntity->VPhysicsGetObject()->SetPosition(baseEntity->GetAbsOrigin(), baseEntity->GetAbsAngles(), true);
+	baseEntity->VPhysicsUpdate(baseEntity->VPhysicsGetObject());
 }
 
 
@@ -164,40 +170,56 @@ void CWeaponCamera::Precache( void )
 	//UTIL_PrecacheOther( "env_flare" );
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: Constructor
+//-----------------------------------------------------------------------------
 CWeaponCamera::CWeaponCamera(void)
 {
 	m_flNextSecondaryAttack = gpGlobals->curtime;
+	m_next_scale_time = gpGlobals->curtime;
 	m_current_inventory_slot = 0;
 	m_buttonPressed = false;
 	SetThink(NULL); // No think, just do
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: Get the state of the camera
+//-----------------------------------------------------------------------------
 int CWeaponCamera::GetState(void)
 {
 	return m_cameraState;
 }
 
+
+//-----------------------------------------------------------------------------
+// Purpose: Switch to slot and then enter placement mode
+//-----------------------------------------------------------------------------
 void CWeaponCamera::SetSlot(int slot)
 {
-	if (slot > m_inventory.Count()-1) {
+	if (slot > m_inventory.Count()-1) { // If slot is not in the inventory
 		Msg("Cannot switch to slot, slot invalid");
 		return;
 	}
 
+	// If in placement mode, exitplacement mode and hide the entity
 	if (m_cameraState == CAMERA_PLACEMENT) {
 		SetThink(NULL);
 		m_inventory[m_current_inventory_slot].HideEntity(); // Hide current placements
 		m_cameraState = CAMERA_NORMAL;
 	}
 
+	// Set slot
 	m_current_inventory_slot = slot;
 
 	Msg("Slot Changed");
-	SecondaryAttack();
+	SecondaryAttack(); // Enter placement mode
 }
 
+
 //-----------------------------------------------------------------------------
-// Zoom
+// Purpose: Set zoom
 //-----------------------------------------------------------------------------
 void CWeaponCamera::SetZoom(bool zoomState)
 {
@@ -214,8 +236,9 @@ void CWeaponCamera::SetZoom(bool zoomState)
 	}
 }
 
+
 //-----------------------------------------------------------------------------
-// Keyboard input callback
+// Purpose: Handle keyboard input from player
 //-----------------------------------------------------------------------------
 void CWeaponCamera::ItemPostFrame(void)
 {
@@ -278,15 +301,15 @@ void CWeaponCamera::PlacementThink(void) {
 	trace_t tr;
 	UTIL_TraceLine(pOwner->EyePosition(), pOwner->EyePosition() + (dir * MAX_TRACE_LENGTH), MASK_SOLID, pOwner, COLLISION_GROUP_NONE, &tr);
 
-	//int radiusOffset = m_inventory[m_current_inventory_slot]->modelRadius;
-
 	// Make item visible again
-	CBaseEntity* baseEntity = dynamic_cast<CBaseEntity*>(m_inventory[m_current_inventory_slot].GetEntity());
-
-	Vector offset = Vector(m_inventory[m_current_inventory_slot].GetModelRadius() / 2, m_inventory[m_current_inventory_slot].GetModelRadius() / 2, m_inventory[m_current_inventory_slot].GetModelRadius() / 2);
+	CBaseAnimating* baseEntity = dynamic_cast<CBaseAnimating*>(m_inventory[m_current_inventory_slot].GetEntity());
+	baseEntity->UpdateModelScale();
 
 	baseEntity->SetAbsOrigin(tr.endpos - (dir * (m_inventory[m_current_inventory_slot].GetModelRadius())));
-	
+	QAngle angles = baseEntity->GetAbsAngles();
+	angles.y += 0.5;
+	baseEntity->SetAbsAngles(angles);
+
 	m_inventory[m_current_inventory_slot].RestoreEntity(false); // Visible but not solid
 
 	SetNextThink(gpGlobals->curtime + 0.01f);
@@ -332,6 +355,14 @@ void CWeaponCamera::PrimaryAttack( void )
 		if (tr.DidHit()) {
 			CBaseEntity* baseEntity = dynamic_cast<CBaseEntity*>(tr.m_pEnt);
 
+			// Check blacklist against entity
+			for (int i = 0; i < CAMERA_BLACKLIST_LEN; i++) {
+				if (strcmp(baseEntity->GetClassname(), CAMERA_BLACKLIST[i]) == 0) {
+					Msg("Cannot capture entity");
+					return;
+				}
+			}
+
 			// Get Entity Info
 			CameraEntity entityData;
 			entityData.SetEntity(baseEntity);
@@ -375,7 +406,7 @@ void CWeaponCamera::SecondaryAttack( void )
 		return;
 	}
 
-	if (m_current_inventory_slot > m_inventory.Count()-1) {
+	if (m_current_inventory_slot > m_inventory.Count()-1) { // Cannot switch to placement mode
 		Msg("CANNOT SWITCH TO PLACE: Current inventory slot invalid, switchin slot");
 		if (m_inventory.Count() > 0) {
 			m_current_inventory_slot = m_inventory.Count() - 1;
@@ -397,6 +428,9 @@ void CWeaponCamera::SecondaryAttack( void )
 //-----------------------------------------------------------------------------
 void CWeaponCamera::ChangeScale(bool scaleType)
 {
+	if (m_next_scale_time > gpGlobals->curtime) {
+		return; // Not time for scale yet
+	}
 	if (m_cameraState != CAMERA_PLACEMENT) {
 		return; // Cannot scale outside of placement
 	}
@@ -404,13 +438,25 @@ void CWeaponCamera::ChangeScale(bool scaleType)
 	Msg("Scaling item");
 
 	CBaseAnimating* baseEntity = dynamic_cast<CBaseAnimating*>(m_inventory[m_current_inventory_slot].GetEntity());
-	//baseEntity->SetModelScale(2, 0.0);
 
-	UTIL_CreateScaledPhysObject(baseEntity, scaleType ? 2 : 1);
+	if (baseEntity->GetModelScale() == (scaleType ? CAMERA_MAX_SCALE : CAMERA_MIN_SCALE)) { // Check if already at max/min scale for that "scale direction"
+		Msg("Cannot scale further");
+		return;
+	}
+
+	float targetScale = baseEntity->GetModelScale() + (scaleType ? CAMERA_SCALE_STEP : -CAMERA_SCALE_STEP);
+
+	UTIL_CreateScaledPhysObject(baseEntity, targetScale, 0.25);
 	CCollisionProperty* entityCollision = baseEntity->CollisionProp();
 	entityCollision->RefreshScaledCollisionBounds();
+
+	//Vector modelSize = baseEntity->CollisionProp()->OBBMaxs() - baseEntity->CollisionProp()->OBBMins();
+	//m_inventory[m_current_inventory_slot].SetModelRadius(sqrt(pow(modelSize.x, 2) + pow(modelSize.y, 2)));
+	//m_inventory[m_current_inventory_slot].SetModelHeight(modelSize.z);
 	
 	//entityCollision->SetCollisionBounds()
+
+	m_next_scale_time = gpGlobals->curtime + 0.25;
 }
 
 

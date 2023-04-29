@@ -488,7 +488,7 @@ public:
 // pModelName should not include the "models/" prefix.
 CPhysicsProp* CreatePhysicsProp( const char *pModelName, const Vector &vTraceStart, const Vector &vTraceEnd, const IHandleEntity *pTraceIgnore, bool bRequireVCollide, const char *pClassName="physics_prop" );
 
-bool UTIL_CreateScaledPhysObject( CBaseAnimating *pInstance, float flScale );
+bool UTIL_CreateScaledPhysObject( CBaseAnimating *pInstance, float flScale, float change_duration=0.0f );
 
 float GetBreakableDamage( const CTakeDamageInfo &inputInfo, IBreakableWithPropData *pProp = NULL );
 int PropBreakablePrecacheAll( string_t modelName );

@@ -7000,7 +7000,7 @@ CPhysicsProp* CreatePhysicsProp( const char *pModelName, const Vector &vTraceSta
 //-----------------------------------------------------------------------------
 // Purpose: Scale the object to a new size, taking its render verts and physical verts into account
 //-----------------------------------------------------------------------------
-bool UTIL_CreateScaledPhysObject( CBaseAnimating *pInstance, float flScale )
+bool UTIL_CreateScaledPhysObject( CBaseAnimating *pInstance, float flScale, float change_duration )
 {
 	// Don't scale NPCs
 	if ( pInstance->MyCombatCharacterPointer() )
@@ -7119,16 +7119,16 @@ bool UTIL_CreateScaledPhysObject( CBaseAnimating *pInstance, float flScale )
 	pInstance->VPhysicsSetObject( pNewObject );
 
 	// Increase our model bounds
-	const model_t *pModel = modelinfo->GetModel( pInstance->GetModelIndex() );
-	if ( pModel )
-	{
-		Vector mins, maxs;
-		modelinfo->GetModelBounds( pModel, mins, maxs );
-		pInstance->SetCollisionBounds( mins*flScale, maxs*flScale );
-	}
+	//const model_t *pModel = modelinfo->GetModel( pInstance->GetModelIndex() );
+	//if ( pModel )
+	//{
+	//	Vector mins, maxs;
+	//	modelinfo->GetModelBounds( pModel, mins, maxs );
+	//	pInstance->SetCollisionBounds( mins*flScale, maxs*flScale );
+	//}
 
 	// Scale the base model as well
-	pInstance->SetModelScale( flScale );
+	pInstance->SetModelScale( flScale, change_duration);
 
 	if ( pInstance->GetParent() )
 	{

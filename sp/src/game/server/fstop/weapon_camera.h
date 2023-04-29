@@ -38,8 +38,8 @@ public:
 	void			SetEffects(int pEffects) { effects = pEffects; }
 	int				GetEffects(void) { return moveType; }
 
-	void			SetAsleep(bool pAsleep) { asleep = pAsleep; }
-	bool			GetAsleep(void) { return asleep; }
+	void			SetShouldWake(bool pShouldWake ) { shouldWake = pShouldWake; }
+	bool			GetShouldWake(void) { return shouldWake; }
 
 	void			SetModelRadius(float pModelRadius) { modelRadius = pModelRadius; }
 	float			GetModelRadius(void) { return modelRadius; }
@@ -57,7 +57,7 @@ private:
 	MoveType_t		moveType;
 	SolidType_t		solidType;
 	int				effects;
-	bool			asleep;
+	bool			shouldWake;
 
 	float			modelRadius;
 	float			modelHeight;
@@ -98,6 +98,8 @@ private:
 	bool	m_buttonPressed; // For input
 	CUtlVector< CameraEntity >	m_inventory;
 	int		m_current_inventory_slot;
+
+	float	m_next_scale_time;
 
 	DECLARE_DATADESC();
 };
