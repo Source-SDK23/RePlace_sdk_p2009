@@ -60,7 +60,8 @@ public:
 	void OnPhysGunDrop(CBasePlayer* pPhysGunUser, PhysGunDrop_t reason);
 	//virtual void Activate(void);
 
-	void ToggleLaser(bool state);
+	bool ToggleLaser(bool state, byte beamR=0, byte beamG=0, byte beamB=0, byte spriteR=0, byte spriteG=0, byte spriteB=0);
+	CBaseEntity* GetLaser();
 
 	int GetCubeType() { return m_cubeType; }
 	void SetCubeType(int type) { m_cubeType = type; }

@@ -7,11 +7,9 @@
 #define CATCHER_AMBIENCE_SOUND "world/laser_node_lp_01.wav"
 
 #define LASER_EMITTER_DEFAULT_SPRITE "sprites/light_glow02_add.vmt"//"sprites/purpleglow1.vmt"
-#define LASER_SPRITE_COLOUR 255, 64, 64
 
 // CVar for visuals
 // TODO: Finialize visuals and use macros/constants instead!
-extern ConVar portal_laser_glow_sprite_colour;
 extern ConVar portal_laser_glow_sprite;
 extern ConVar portal_laser_glow_sprite_scale;
 
@@ -61,7 +59,7 @@ void CFuncLaserDetector::Precache() {
 	BaseClass::Precache();
 }
 
-void CFuncLaserDetector::AddEmitter(CBaseEntity* emitter) {
+void CFuncLaserDetector::AddEmitter(CBaseEntity* emitter, byte spriteR, byte spriteG, byte spriteB) {
 	// Store previous list count
 	int oldCount = m_LaserList.Count();
 
@@ -83,7 +81,7 @@ void CFuncLaserDetector::AddEmitter(CBaseEntity* emitter) {
 			CPropLaserCatcher* catcher = dynamic_cast<CPropLaserCatcher*>(m_pProp.Get());
 			if (catcher) {
 				// Fire "PowerOn" output of the parent prop.
-				catcher->FirePowerOnOutput();
+				catcher->FirePowerOnOutput(spriteR, spriteG, spriteB);
 			}
 		}
 		// Create looping "active" sound
@@ -234,14 +232,7 @@ void CPropLaserCatcher::Spawn() {
 		m_pActivatedSprite->SetAbsOrigin(vecOrigin);
 		m_pActivatedSprite->SetRenderMode(kRenderWorldGlow);
 
-		const char* szColor = portal_laser_glow_sprite_colour.GetString();
-		if (szColor != NULL && Q_strlen(szColor) > 0) {
-			int r, g, b;
-			sscanf(szColor, "%i%i%i", &r, &g, &b);
-			m_pActivatedSprite->SetRenderColor(r, g, b);
-		} else {
-			m_pActivatedSprite->SetRenderColor(LASER_SPRITE_COLOUR);
-		}
+		m_pActivatedSprite->SetRenderColor(255, 255, 255);
 		m_pActivatedSprite->SetScale(portal_laser_glow_sprite_scale.GetFloat());
 		m_pActivatedSprite->TurnOff();
 	}
@@ -259,7 +250,7 @@ void CPropLaserCatcher::Spawn() {
 	CreateVPhysics();
 }
 
-void CPropLaserCatcher::FirePowerOnOutput() {
+void CPropLaserCatcher::FirePowerOnOutput(byte spriteR, byte spriteG, byte spriteB) {
 	if (m_szActiveAnimation != NULL) {
 		inputdata_t input;
 		input.value.SetString(MAKE_STRING(m_szActiveAnimation));
@@ -267,6 +258,7 @@ void CPropLaserCatcher::FirePowerOnOutput() {
 	}
 
 	if (m_pActivatedSprite != NULL) {
+		m_pActivatedSprite->SetRenderColor(spriteR, spriteG, spriteB);
 		m_pActivatedSprite->TurnOn();
 	}
 	m_nSkin = 1;

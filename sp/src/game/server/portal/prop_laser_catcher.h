@@ -13,7 +13,7 @@ public:
 	virtual void Precache();
 	virtual void Spawn();
 
-	virtual void AddEmitter(CBaseEntity* emitter);
+	virtual void AddEmitter(CBaseEntity* emitter, byte spriteR, byte spriteG, byte spriteB);
 	virtual void RemoveEmitter(CBaseEntity* emitter);
 
 	virtual void CreateSounds();
@@ -53,11 +53,14 @@ public:
 	virtual void Precache();
 	virtual void Spawn();
 
-	void FirePowerOnOutput();
+	void FirePowerOnOutput(byte spriteR, byte spriteG, byte spriteB);
 	void FirePowerOffOutput();
+
 private:
 	CFuncLaserDetector* m_pLaserDetector;
 	CSprite* m_pActivatedSprite;
+
+	CNetworkColor32(m_clrSprite);
 
 	const char* m_szIdleAnimation;
 	const char* m_szActiveAnimation;

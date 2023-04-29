@@ -221,15 +221,8 @@ void CPropWeightedCube::Spawn()
 
 	SetUse(&CPropWeightedCube::Use);
 
-	BaseClass::Spawn();
-
-}
-
-void CPropWeightedCube::ToggleLaser(bool state)
-{
-	if (m_cubeType != Reflective) return;
-
-	if (m_pLaser == nullptr) {
+	if (m_cubeType == Reflective) {
+		// Create laser
 		CEnvPortalLaser* pLaser = dynamic_cast<CEnvPortalLaser*>(CreateEntityByName("env_portal_laser"));
 		pLaser->Activate(); // Should be called when map loads so I put it at the top
 
@@ -247,9 +240,8 @@ void CPropWeightedCube::ToggleLaser(bool state)
 		pLaser->TurnOff();
 		DispatchSpawn(pLaser);
 		m_pLaser = pLaser;
-	}
 
-	if (m_pLaserSprite == nullptr) {
+
 		// Create glow
 		m_pLaserSprite = dynamic_cast<CSprite*>(CreateEntityByName("env_sprite"));
 		if (m_pLaserSprite != NULL) {
@@ -264,22 +256,34 @@ void CPropWeightedCube::ToggleLaser(bool state)
 			m_pLaserSprite->SetParent(this, 0);
 			DispatchSpawn(m_pLaserSprite);
 			m_pLaserSprite->SetRenderMode(kRenderWorldGlow);
-			const char* szColor = portal_laser_glow_sprite_colour.GetString();
-			if (szColor != NULL && Q_strlen(szColor) > 0) {
-				int r, g, b;
-				sscanf(szColor, "%i%i%i", &r, &g, &b);
-				m_pLaserSprite->SetRenderColor(r, g, b);
-			}
-			else {
-				m_pLaserSprite->SetRenderColor(LASER_SPRITE_COLOUR);
-			}
 			m_pLaserSprite->SetScale(portal_laser_glow_sprite_scale.GetFloat());
 
 			m_pLaserSprite->TurnOff();
 		}
 	}
 
+	BaseClass::Spawn();
+
+}
+
+CBaseEntity* CPropWeightedCube::GetLaser() {
+	return m_pLaser;
+}
+
+bool CPropWeightedCube::ToggleLaser(bool state, byte beamR, byte beamG, byte beamB, byte spriteR, byte spriteG, byte spriteB)
+{
+	if (m_cubeType != Reflective) return false;
+
 	CEnvPortalLaser* pLaser = dynamic_cast<CEnvPortalLaser*>(m_pLaser);
+
+	if (pLaser->GetState() == state) {
+		return false; // If the cube is already "on/off" from from another laser, do nothing
+	}
+
+	pLaser->SetBeamColour(beamR, beamG, beamB);
+	pLaser->SetSpriteColour(spriteR, spriteG, spriteB);
+
+	m_pLaserSprite->SetRenderColor(spriteR, spriteG, spriteB);
 
 	if (state == true) {
 		pLaser->TurnOn();
@@ -289,6 +293,8 @@ void CPropWeightedCube::ToggleLaser(bool state)
 		pLaser->TurnOff();
 		m_pLaserSprite->TurnOff();
 	}
+
+	return true;
 }
 
 void CPropWeightedCube::InputPreDissolveJoke(inputdata_t& data)

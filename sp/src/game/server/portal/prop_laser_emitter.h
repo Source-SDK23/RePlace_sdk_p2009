@@ -26,9 +26,14 @@ public:
 	void TurnOn();
 	void TurnOff();
 	void Toggle();
+	
+	bool GetState();
 
 	void CreateSounds();
 	void DestroySounds();
+
+	void SetBeamColour(byte r, byte g, byte b);
+	void SetSpriteColour(byte r, byte g, byte b);
 
 	void InputTurnOn(inputdata_t& data);
 	void InputTurnOff(inputdata_t& data);
@@ -46,8 +51,10 @@ private:
 	CSoundPatch* m_pLaserSound;
 
 	CFuncLaserDetector* m_pCatcher;
-
 	CPropWeightedCube* m_pCube;
+
+	CNetworkColor32(m_clrBeam);
+	CNetworkColor32(m_clrSprite);
 
 	float m_fHurnSoundTime, m_fPlayerDamage;
 	int m_iSprite;
@@ -74,6 +81,8 @@ private:
 	CEnvPortalLaser* m_pLaser;
 	CSprite* m_pLaserSprite;
 
+	CNetworkColor32(m_clrBeam);
+	CNetworkColor32(m_clrSprite);
 	float m_fPlayerDamage;
 
 	DECLARE_DATADESC();

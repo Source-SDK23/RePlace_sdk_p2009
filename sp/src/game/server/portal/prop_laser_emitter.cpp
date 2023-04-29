@@ -15,14 +15,10 @@
 #include "prop_weightedcube.h"
 
 #define LASER_BEAM_SPRITE "sprites/purplelaser1.vmt"//"sprites/xbeam2.vmt"
-#define LASER_BEAM_COLOUR_CVAR "255 128 128"
-#define LASER_BEAM_COLOUR 255, 128, 128
 #define LASER_BEAM_WIDTH_CVAR "2"
 #define LASER_BEAM_WIDTH 2
 
 #define LASER_EMITTER_DEFAULT_SPRITE "sprites/light_glow02_add.vmt"//"sprites/purpleglow1.vmt"
-#define LASER_SPRITE_COLOUR_CVAR "255 64 64"
-#define LASER_SPRITE_COLOUR 255, 64, 64
 #define LASER_SPRITE_SCALE_CVAR "0.75"
 #define LASER_SPRITE_SCALE 0.75f
 
@@ -38,11 +34,9 @@
 
 // CVar for visuals
 // TODO: Finialize visuals and use macros/constants instead!
-ConVar portal_laser_beam_colour("portal_laser_beam_colour", LASER_BEAM_COLOUR_CVAR, FCVAR_REPLICATED, "Set the colour of the laser beams. Note: You need to reload the map to apply changes!");
 ConVar portal_laser_beam_texture("portal_laser_beam_texture", LASER_BEAM_SPRITE, FCVAR_REPLICATED, "Set the texture of the laser beams. Note: You need to reload the map to apply changes!");
 ConVar portal_laser_beam_width("portal_laser_beam_width", LASER_BEAM_WIDTH_CVAR, FCVAR_REPLICATED, "Laser beam's width");
 
-ConVar portal_laser_glow_sprite_colour("portal_laser_glow_sprite_colour", LASER_SPRITE_COLOUR_CVAR, FCVAR_REPLICATED, "Set the colour of the laser emitter/catcher glow sprite. Note: You need to reload the map to apply changes!");
 ConVar portal_laser_glow_sprite("portal_laser_glow_sprite", LASER_EMITTER_DEFAULT_SPRITE, FCVAR_REPLICATED, "Sprite on the laser emitter/catcher.");
 ConVar portal_laser_glow_sprite_scale("portal_laser_glow_sprite_scale", LASER_SPRITE_SCALE_CVAR, FCVAR_REPLICATED, "Laser emitter/catcher sprite scale.");
 
@@ -69,6 +63,8 @@ BEGIN_DATADESC(CEnvPortalLaser)
 // Key fields
 	DEFINE_KEYFIELD(m_bStartActive, FIELD_BOOLEAN, "startactive"),
 	DEFINE_KEYFIELD(m_fPlayerDamage, FIELD_FLOAT, "playerdamage"),
+	DEFINE_KEYFIELD(m_clrBeam, FIELD_COLOR32, "beamcolour"),
+	DEFINE_KEYFIELD(m_clrSprite, FIELD_COLOR32, "spritecolour"),
 // Inputs
 	DEFINE_INPUTFUNC(FIELD_VOID, "TurnOn", InputTurnOn),
 	DEFINE_INPUTFUNC(FIELD_VOID, "TurnOff", InputTurnOff),
@@ -106,6 +102,24 @@ void CEnvPortalLaser::Spawn() {
 	} else {
 		TurnOff();
 	}
+}
+
+bool CEnvPortalLaser::GetState(void) {
+	return m_bStatus;
+}
+
+void CEnvPortalLaser::SetBeamColour(byte r, byte g, byte b) {
+	color32 clr = { r, g, b, 1 };
+	m_clrBeam = clr;
+
+	if (m_pBeam) {
+		m_pBeam->SetColor(r, g, b); // Update beam colour
+	}
+}
+
+void CEnvPortalLaser::SetSpriteColour(byte r, byte g, byte b) {
+	color32 clr = { r, g, b, 1 };
+	m_clrSprite = clr;
 }
 
 void CEnvPortalLaser::LaserThink() {
@@ -184,7 +198,7 @@ void CEnvPortalLaser::LaserThink() {
 						m_pCatcher->RemoveEmitter(this);
 					}
 					// Add this emitter to the new catcher
-					pCatcher->AddEmitter(this);
+					pCatcher->AddEmitter(this, m_clrSprite.GetR(), m_clrSprite.GetG(), m_clrSprite.GetB());
 					// Keep track of the new catcher
 					m_pCatcher = pCatcher;
 				}
@@ -216,9 +230,10 @@ void CEnvPortalLaser::LaserThink() {
 					// Check if the cube is reflective AND different from old one
 					if (pCube->GetCubeType() == Reflective && m_pCube != pCube) {
 						// Activate the new cube
-						pCube->ToggleLaser(true);
-						// Keep track of the new cube
-						m_pCube = pCube;
+						if (pCube->ToggleLaser(true, m_clrBeam.GetR(), m_clrBeam.GetG(), m_clrBeam.GetB(), m_clrSprite.GetR(), m_clrSprite.GetG(), m_clrSprite.GetB())) {
+							// Keep track of the new cube
+							m_pCube = pCube; // If laser wasn't already on, track new cube, otherwise ignore
+						}
 					}
 				}
 
@@ -269,14 +284,8 @@ void CEnvPortalLaser::TurnOn() {
 				}
 				m_pBeam->BeamInit(szSprite, portal_laser_beam_width.GetFloat());
 
-				// Get laser colour
-				int r = 0xFF, g = 0x00, b = 0x00;
-				const char* szColours = portal_laser_beam_colour.GetString();
-				if (szColours != NULL && Q_strlen(szColours) > 0) {
-					sscanf(szColours, "%i%i%i", &r, &g, &b);
-				}
-
-				m_pBeam->SetColor(r, g, b);
+				// Set laser colour
+				m_pBeam->SetColor(m_clrBeam.GetR(), m_clrBeam.GetG(), m_clrBeam.GetB());
 				m_pBeam->SetBrightness(255);
 				m_pBeam->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
 				m_pBeam->PointsInit(vecOrigin, vecOrigin + vecDir * MAX_TRACE_LENGTH);
@@ -302,13 +311,7 @@ void CEnvPortalLaser::TurnOn() {
 				m_pBeamAfterPortal->BeamInit(szSprite, portal_laser_beam_width.GetFloat());
 
 				// Get laser colour
-				int r = 0xFF, g = 0x00, b = 0x00;
-				const char* szColours = portal_laser_beam_colour.GetString();
-				if (szColours != NULL && Q_strlen(szColours) > 0) {
-					sscanf(szColours, "%i%i%i", &r, &g, &b);
-				}
-
-				m_pBeamAfterPortal->SetColor(r, g, b);
+				m_pBeamAfterPortal->SetColor(m_clrBeam.GetR(), m_clrBeam.GetG(), m_clrBeam.GetB());
 				m_pBeamAfterPortal->SetBrightness(255);
 				m_pBeamAfterPortal->SetCollisionGroup(COLLISION_GROUP_DEBRIS);
 				m_pBeamAfterPortal->PointsInit(vecOrigin, vecOrigin + vecDir * MAX_TRACE_LENGTH);
@@ -480,6 +483,8 @@ BEGIN_DATADESC(CPropLaserEmitter)
 // Key fields
 	DEFINE_KEYFIELD(m_bStartActive, FIELD_BOOLEAN, "startactive"),
 	DEFINE_KEYFIELD(m_fPlayerDamage, FIELD_FLOAT, "playerdamage"),
+	DEFINE_KEYFIELD(m_clrBeam, FIELD_COLOR32, "beamcolour"),
+	DEFINE_KEYFIELD(m_clrSprite, FIELD_COLOR32, "spritecolour"),
 // Inputs
 	DEFINE_INPUTFUNC(FIELD_VOID, "TurnOn", InputTurnOn),
 	DEFINE_INPUTFUNC(FIELD_VOID, "TurnOff", InputTurnOff),
@@ -515,6 +520,8 @@ void CPropLaserEmitter::Spawn() {
 		m_pLaser->Precache();
 		m_pLaser->SetParent(this);
 		m_pLaser->SetParentAttachment("SetParentAttachment", "laser_attachment", false);
+		m_pLaser->SetBeamColour(m_clrBeam.GetR(), m_clrBeam.GetG(), m_clrBeam.GetB());
+		m_pLaser->SetSpriteColour(m_clrSprite.GetR(), m_clrSprite.GetG(), m_clrSprite.GetB());
 
 		DispatchSpawn(m_pLaser);
 
@@ -538,14 +545,7 @@ void CPropLaserEmitter::Spawn() {
 		m_pLaserSprite->SetParentAttachment("SetParentAttachment", "laser_attachment", false);
 		DispatchSpawn(m_pLaserSprite);
 		m_pLaserSprite->SetRenderMode(kRenderWorldGlow);
-		const char* szColor = portal_laser_glow_sprite_colour.GetString();
-		if (szColor != NULL && Q_strlen(szColor) > 0) {
-			int r, g, b;
-			sscanf(szColor, "%i%i%i", &r, &g, &b);
-			m_pLaserSprite->SetRenderColor(r, g, b);
-		} else {
-			m_pLaserSprite->SetRenderColor(LASER_SPRITE_COLOUR);
-		}
+		m_pLaserSprite->SetRenderColor(m_clrSprite.GetR(), m_clrSprite.GetG(), m_clrSprite.GetB());
 		m_pLaserSprite->SetScale(portal_laser_glow_sprite_scale.GetFloat());
 
 		if (m_bStartActive) {
