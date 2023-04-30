@@ -1,3 +1,7 @@
+# NOTE
+This repository has been archived in favour for a clean Mapbase fork which does **not** contain leaked code
+
+---
 # RePlace SDK
 A FOSS source engine branch forked from `p2009` with many features and improvements.
 
